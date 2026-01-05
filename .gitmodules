@@ -1,0 +1,3 @@
+[submodule "external/z3"]
+	path = external/z3
+	url = https://github.com/Z3Prover/z3
