@@ -2,6 +2,7 @@
 #include <vector>
 #include <string>
 #include <sstream>
+#include <cassert>
 #include "z3++.h"
 
 // ============================================================
@@ -66,26 +67,22 @@ namespace BitOps {
 }
 
 // ============================================================
-//  Partial Preorder Finder
+//  FrameVariables - Holds Z3 symbolic variables
 // ============================================================
-//  Find a partial preorder relation over the powerset P(Omega)
-//  represented as a boolean matrix R[i][j] where i,j are bitmasks
+//  Decoupled from solver; can be shared across multiple solvers
 // ============================================================
 
-class PartialPreorderFinder {
+class FrameVariables {
     z3::context& ctx;
     int n;              // Universe size
     int powerset_size;  // 2^n subsets
     std::vector<std::vector<z3::expr>> R;  // R[i][j] = (subset_i ≤ subset_j)
-    
+
 public:
-    PartialPreorderFinder(z3::context& c, int universe_size) 
+    FrameVariables(z3::context& c, int universe_size)
         : ctx(c), n(universe_size), powerset_size(1 << universe_size) {
         
-        std::cout << "Creating partial preorder finder for universe size " << n << "\n";
-        std::cout << "Powerset has " << powerset_size << " subsets\n";
-        
-        // Step 1: CREATE FREE VARIABLES - Boolean matrix R[i][j]
+        // Create boolean matrix R[i][j]
         for (int i = 0; i < powerset_size; ++i) {
             R.emplace_back();
             for (int j = 0; j < powerset_size; ++j) {
@@ -95,170 +92,200 @@ public:
         }
         std::cout << "Created " << (powerset_size * powerset_size) << " boolean variables\n";
     }
-    
-    // Step 2: ENCODE PARTIAL PREORDER AXIOMS
-    void add_preorder_axioms(z3::solver& s) {
-        std::cout << "\nEncoding partial preorder axioms...\n";
-        
-        // AXIOM 1: Reflexivity - every subset is related to itself
-        std::cout << "  Adding reflexivity constraints...\n";
-        for (int i = 0; i < powerset_size; ++i) {
-            s.add(R[i][i]);  // R[i][i] = true
-        }
-        
-        // AXIOM 2: Transitivity - if i ≤ j and j ≤ k, then i ≤ k
-        std::cout << "  Adding transitivity constraints...\n";
-        int trans_count = 0;
-        for (int i = 0; i < powerset_size; ++i) {
-            for (int j = 0; j < powerset_size; ++j) {
-                for (int k = 0; k < powerset_size; ++k) {
+
+    // Accessors
+    z3::context& context() { return ctx; }
+    int universe_size() const { return n; }
+    int size() const { return powerset_size; }
+    z3::expr& get_R(int i, int j) { return R[i][j]; }
+    const z3::expr& get_R(int i, int j) const { return R[i][j]; }
+};
+
+// ============================================================
+//  AxiomEncoder - Methods to encode axioms into constraints
+// ============================================================
+//  Each axiom is a separate method; call directly as needed
+// ============================================================
+
+class AxiomEncoder {
+    FrameVariables& vars;
+
+public:
+    AxiomEncoder(FrameVariables& v) : vars(v) {}
+
+    // AXIOM: Transitivity - if i ≤ j and j ≤ k, then i ≤ k
+    void encode_transitivity(z3::solver& s) {
+        std::cout << "  Encoding transitivity...\n";
+        int count = 0;
+        for (int i = 0; i < vars.size(); ++i) {
+            for (int j = 0; j < vars.size(); ++j) {
+                for (int k = 0; k < vars.size(); ++k) {
                     // (R[i][j] ∧ R[j][k]) → R[i][k]
-                    s.add(z3::implies(R[i][j] && R[j][k], R[i][k]));
-                    trans_count++;
+                    s.add(z3::implies(vars.get_R(i, j) && vars.get_R(j, k), vars.get_R(i, k)));
+                    count++;
                 }
             }
         }
-        std::cout << "  Added " << trans_count << " transitivity implications\n";
+        std::cout << "    Added " << count << " transitivity implications\n";
     }
-    
-    // Optional: Monotonicity - subset inclusion implies ordering
-    void add_monotonicity(z3::solver& s) {
-        std::cout << "  Adding monotonicity (subset inclusion → ordering)...\n";
-        for (int i = 0; i < powerset_size; ++i) {
-            for (int j = 0; j < powerset_size; ++j) {
+
+    // AXIOM: Monotonicity - subset inclusion implies ordering
+    void encode_monotonicity(z3::solver& s) {
+        std::cout << "  Encoding monotonicity (subset inclusion → ordering)...\n";
+        for (int i = 0; i < vars.size(); ++i) {
+            for (int j = 0; j < vars.size(); ++j) {
                 if (BitOps::is_subset(i, j)) {
-                    s.add(R[i][j]);  // i ⊆ j → i ≤ j
+                    s.add(vars.get_R(i, j));  // i ⊆ j → i ≤ j
                 }
             }
         }
     }
-    
-    // Optional: Require non-trivial ordering (not just equality)
-    void require_nontrivial(z3::solver& s) {
-        std::cout << "  Requiring non-trivial ordering...\n";
-        z3::expr_vector has_strict_order(ctx);
-        
-        for (int i = 0; i < powerset_size; ++i) {
-            for (int j = 0; j < powerset_size; ++j) {
-                if (i != j) {
-                    // At least one strict ordering: i ≤ j but not j ≤ i
-                    has_strict_order.push_back(R[i][j] && !R[j][i]);
-                }
-            }
-        }
-        s.add(z3::mk_or(has_strict_order));
+
+    // AXIOM: Non-triviality - it is not the case that the full set Omega and the empty set stand in the relation R.
+    void encode_non_triviality(z3::solver& s) {
+        std::cout << "  Encoding non-triviality...\n";
+        int full_set = vars.size() - 1;  // Assuming full set is the last subset
+        int empty_set = 0;                // Assuming empty set is the first subset
+        s.add(!vars.get_R(full_set, empty_set));
     }
-    
-    // Step 4: EXTRACT & DISPLAY MODEL
-    void display_model(z3::model& m) {
+};
+
+// ============================================================
+//  FrameFinder - Solver orchestrator
+// ============================================================
+//  Owns context, solver, variables, and encoder
+// ============================================================
+
+class FrameFinder {
+    z3::context ctx;
+    z3::solver s;
+    FrameVariables vars;
+    AxiomEncoder enc;
+
+public:
+    FrameFinder(int universe_size)
+        : ctx(), s(ctx), vars(ctx, universe_size), enc(vars) {
+        std::cout << "FrameFinder initialized for universe size " << universe_size << "\n";
+        std::cout << "Powerset has " << vars.size() << " subsets\n";
+    }
+
+    // Accessors
+    z3::solver& solver() { return s; }
+    AxiomEncoder& encoder() { return enc; }
+    FrameVariables& variables() { return vars; }
+
+    // Solve and return result
+    z3::check_result solve() {
+        std::cout << "\nSearching for solution...\n";
+        return s.check();
+    }
+
+    // Get model (call after SAT)
+    z3::model get_model() {
+        return s.get_model();
+    }
+
+    // Display model
+    void display_model() {
+        z3::model m = get_model();
+        int ps = vars.size();
+        int n = vars.universe_size();
+
         std::cout << "\n=== PARTIAL PREORDER FOUND ===\n\n";
-        
+
         // Extract boolean matrix
-        std::vector<std::vector<bool>> matrix(powerset_size, std::vector<bool>(powerset_size));
-        for (int i = 0; i < powerset_size; ++i) {
-            for (int j = 0; j < powerset_size; ++j) {
-                matrix[i][j] = m.eval(R[i][j]).is_true();
+        std::vector<std::vector<bool>> matrix(ps, std::vector<bool>(ps));
+        for (int i = 0; i < ps; ++i) {
+            for (int j = 0; j < ps; ++j) {
+                matrix[i][j] = m.eval(vars.get_R(i, j)).is_true();
             }
         }
-        
-        // Display full matrix
-        display_matrix(matrix);
-        
-        // // Display comparable pairs
-        // display_comparable_pairs(matrix);
-        
-        // // Display covering relations (Hasse diagram edges)
-        // display_covering_relations(matrix);
-        
-        // Verify it's a valid preorder
-        verify_preorder(matrix);
-    }
-    
-private:
-    void display_matrix(const std::vector<std::vector<bool>>& matrix) {
+
+        // Display matrix
         std::cout << "Boolean Matrix R[i][j] (1 means subset_i ≤ subset_j):\n\n";
         std::cout << "     ";
-        for (int j = 0; j < powerset_size; ++j) {
+        for (int j = 0; j < ps; ++j) {
             std::cout << " " << j;
             if (j < 10) std::cout << " ";
         }
         std::cout << "\n     ";
-        for (int j = 0; j < powerset_size; ++j) std::cout << "---";
+        for (int j = 0; j < ps; ++j) std::cout << "---";
         std::cout << "\n";
-        
-        for (int i = 0; i < powerset_size; ++i) {
+
+        for (int i = 0; i < ps; ++i) {
             std::cout << " " << i;
             if (i < 10) std::cout << " ";
             std::cout << " | ";
-            for (int j = 0; j < powerset_size; ++j) {
+            for (int j = 0; j < ps; ++j) {
                 std::cout << (matrix[i][j] ? "1" : "·") << "  ";
             }
             std::cout << " | " << BitOps::to_string(i, n) << "\n";
         }
+
+        // Verify properties for tests
+        verify_preorder(matrix);
+        verify_monotonicity(matrix);
+        verify_non_triviality(matrix);
     }
-    
-    // void display_comparable_pairs(const std::vector<std::vector<bool>>& matrix) {
-    //     std::cout << "\nComparable pairs (i ≤ j):\n";
-    //     int count = 0;
-    //     for (int i = 0; i < powerset_size; ++i) {
-    //         for (int j = 0; j < powerset_size; ++j) {
-    //             if (matrix[i][j] && i != j) {
-    //                 std::cout << "  " << BitOps::to_string(i, n) 
-    //                           << " ≤ " << BitOps::to_string(j, n) << "\n";
-    //                 count++;
-    //             }
-    //         }
-    //     }
-    //     std::cout << "Total: " << count << " strict orderings\n";
-    // }
-    
-    // void display_covering_relations(const std::vector<std::vector<bool>>& matrix) {
-    //     std::cout << "\nCovering relations (Hasse diagram edges):\n";
-    //     // i covers j if i ≤ j and no k exists with i ≤ k ≤ j
-    //     for (int i = 0; i < powerset_size; ++i) {
-    //         for (int j = 0; j < powerset_size; ++j) {
-    //             if (i != j && matrix[i][j]) {
-    //                 bool is_covering = true;
-    //                 for (int k = 0; k < powerset_size; ++k) {
-    //                     if (k != i && k != j && matrix[i][k] && matrix[k][j]) {
-    //                         is_covering = false;
-    //                         break;
-    //                     }
-    //                 }
-    //                 if (is_covering) {
-    //                     std::cout << "  " << BitOps::to_string(i, n) 
-    //                               << " ⋖ " << BitOps::to_string(j, n) << "\n";
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
-    
+
+private:
     void verify_preorder(const std::vector<std::vector<bool>>& matrix) {
+        int ps = vars.size();
         std::cout << "\n=== VERIFICATION ===\n";
-        
+
         // Check reflexivity
         bool reflexive_ok = true;
-        for (int i = 0; i < powerset_size; ++i) {
+        for (int i = 0; i < ps; ++i) {
             if (!matrix[i][i]) {
                 reflexive_ok = false;
                 break;
             }
         }
-        std::cout << "✓ Reflexivity: " << (reflexive_ok ? "PASS" : "FAIL") << "\n";
-        
+        std::cout << "Reflexivity: " << (reflexive_ok ? "PASS" : "FAIL") << "\n";
+        assert(reflexive_ok && "Reflexivity check failed");
+
         // Check transitivity
         bool transitive_ok = true;
-        for (int i = 0; i < powerset_size && transitive_ok; ++i) {
-            for (int j = 0; j < powerset_size && transitive_ok; ++j) {
-                for (int k = 0; k < powerset_size && transitive_ok; ++k) {
+        for (int i = 0; i < ps && transitive_ok; ++i) {
+            for (int j = 0; j < ps && transitive_ok; ++j) {
+                for (int k = 0; k < ps && transitive_ok; ++k) {
                     if (matrix[i][j] && matrix[j][k] && !matrix[i][k]) {
                         transitive_ok = false;
                     }
                 }
             }
         }
-        std::cout << "✓ Transitivity: " << (transitive_ok ? "PASS" : "FAIL") << "\n";
+        std::cout << "Transitivity: " << (transitive_ok ? "PASS" : "FAIL") << "\n";
+        assert(transitive_ok && "Transitivity check failed");
+    }
+
+    void verify_monotonicity(const std::vector<std::vector<bool>>& matrix) {
+        int ps = vars.size();
+        int n = vars.universe_size();
+        bool monotonicity_ok = true;
+
+        for (int i = 0; i < ps; ++i) {
+            for (int j = 0; j < ps; ++j) {
+                if (BitOps::is_subset(i, j) && !matrix[i][j]) {
+                    monotonicity_ok = false;
+                    std::cout << "Monotonicity violation: " 
+                              << BitOps::to_string(i, n) << " ⊆ " 
+                              << BitOps::to_string(j, n) 
+                              << " but not " << i << " ≤ " << j << "\n";
+                }
+            }
+        }
+        std::cout << "Monotonicity: " << (monotonicity_ok ? "PASS" : "FAIL") << "\n";
+        assert(monotonicity_ok && "Monotonicity check failed");
+    }
+
+    void verify_non_triviality(const std::vector<std::vector<bool>>& matrix) {
+        int full_set = vars.size() - 1;
+        int empty_set = 0;
+        bool non_triviality_ok = !matrix[full_set][empty_set];
+
+        std::cout << "Non-triviality: " << (non_triviality_ok ? "PASS" : "FAIL") << "\n";
+        assert(non_triviality_ok && "Non-triviality check failed");
     }
 };
 
@@ -267,31 +294,28 @@ private:
 // ============================================================
 
 int main() {
-    z3::context ctx;
-    z3::solver s(ctx);
-    
-    // Find a partial preorder over P({0,1,2})
-    int n = 3;
-    PartialPreorderFinder finder(ctx, n);
-    
-    // Add core axioms
-    finder.add_preorder_axioms(s);
-    finder.add_monotonicity(s);      // Respect subset inclusion
-    finder.require_nontrivial(s);    // Not just equality
-    
+    // Create finder for universe {0, 1, 2}
+    int n = 5;
+    FrameFinder finder(n);
+
+    // Encode axioms by directly calling encoder methods
+    std::cout << "\nEncoding axioms...\n";
+    finder.encoder().encode_transitivity(finder.solver());
+    finder.encoder().encode_monotonicity(finder.solver());
+    finder.encoder().encode_non_triviality(finder.solver());
+
     // Solve
-    std::cout << "\nSearching for a partial preorder...\n";
-    z3::check_result result = s.check();
-    
+    z3::check_result result = finder.solve();
+
     if (result == z3::sat) {
-        std::cout << "SAT - Partial preorder found!\n";
-        z3::model m = s.get_model();
-        finder.display_model(m);
+        std::cout << "SAT - Solution found!\n";
+        finder.display_model();
     } else if (result == z3::unsat) {
-        std::cout << "UNSAT - No such partial preorder exists with given constraints\n";
+        std::cout << "UNSAT - No solution exists with given constraints\n";
     } else {
         std::cout << "UNKNOWN - Solver couldn't determine\n";
     }
-    
+
     return 0;
 }
+
