@@ -169,6 +169,189 @@ namespace BitOps {
 }
 
 // ============================================================
+//  ModelAnalyzer - Analyze and describe models in natural language
+// ============================================================
+//  Decoupled from solver; operates on extracted boolean matrices
+// ============================================================
+
+namespace ModelAnalyzer {
+    
+    // Represents a pair (i, j) where i ≤ j in the relation
+    struct RelationPair {
+        int from;
+        int to;
+        
+        bool operator==(const RelationPair& other) const {
+            return from == other.from && to == other.to;
+        }
+        bool operator<(const RelationPair& other) const {
+            if (from != other.from) return from < other.from;
+            return to < other.to;
+        }
+    };
+    
+    // Extract all extension pairs: (i, j) where matrix[i][j] = true but i ⊄ j
+    std::vector<RelationPair> extract_extensions(
+        const std::vector<std::vector<bool>>& matrix,
+        int universe_size
+    ) {
+        int ps = static_cast<int>(matrix.size());
+        std::vector<RelationPair> extensions;
+        
+        for (int i = 0; i < ps; ++i) {
+            for (int j = 0; j < ps; ++j) {
+                if (matrix[i][j] && !BitOps::is_subset(i, j)) {
+                    extensions.push_back({i, j});
+                }
+            }
+        }
+        
+        return extensions;
+    }
+    
+    // Compute transitive reduction of a set of pairs
+    // Remove pair (a, c) if there exists b such that (a, b) and (b, c) are both in the set
+    // AND the path a -> b -> c is valid in the full relation
+    std::vector<RelationPair> transitive_reduction(
+        const std::vector<RelationPair>& pairs,
+        const std::vector<std::vector<bool>>& full_matrix
+    ) {
+        std::vector<RelationPair> reduced;
+        
+        for (const auto& pair : pairs) {
+            bool is_redundant = false;
+            
+            // Check if this pair can be derived from other pairs via transitivity
+            // (a, c) is redundant if exists b where full_matrix[a][b] && full_matrix[b][c]
+            // and b != a and b != c
+            int a = pair.from;
+            int c = pair.to;
+            
+            for (int b = 0; b < static_cast<int>(full_matrix.size()); ++b) {
+                if (b == a || b == c) continue;
+                
+                // Check if a ≤ b ≤ c in the full relation, making (a,c) derivable
+                if (full_matrix[a][b] && full_matrix[b][c]) {
+                    is_redundant = true;
+                    break;
+                }
+            }
+            
+            if (!is_redundant) {
+                reduced.push_back(pair);
+            }
+        }
+        
+        return reduced;
+    }
+    
+    // Find equivalence classes: A ~ B iff A ≤ B and B ≤ A
+    std::vector<std::vector<int>> find_equivalence_classes(
+        const std::vector<std::vector<bool>>& matrix
+    ) {
+        int ps = static_cast<int>(matrix.size());
+        std::vector<bool> visited(ps, false);
+        std::vector<std::vector<int>> classes;
+        
+        for (int i = 0; i < ps; ++i) {
+            if (visited[i]) continue;
+            
+            std::vector<int> eq_class;
+            eq_class.push_back(i);
+            visited[i] = true;
+            
+            for (int j = i + 1; j < ps; ++j) {
+                if (!visited[j] && matrix[i][j] && matrix[j][i]) {
+                    eq_class.push_back(j);
+                    visited[j] = true;
+                }
+            }
+            
+            classes.push_back(eq_class);
+        }
+        
+        return classes;
+    }
+    
+    // Generate natural language description of the model
+    void describe_model(
+        const std::vector<std::vector<bool>>& matrix,
+        int universe_size
+    ) {
+        int ps = static_cast<int>(matrix.size());
+        
+        std::cout << "\n=== NATURAL LANGUAGE DESCRIPTION ===\n\n";
+        
+        // 1. Find equivalence classes
+        auto eq_classes = find_equivalence_classes(matrix);
+        
+        // Count non-trivial equivalence classes (size > 1)
+        int non_trivial_count = 0;
+        for (const auto& cls : eq_classes) {
+            if (cls.size() > 1) non_trivial_count++;
+        }
+        
+        std::cout << "1. EQUIVALENCE CLASSES (A ~ B means A ≤ B and B ≤ A):\n";
+        if (non_trivial_count == 0) {
+            std::cout << "   No non-trivial equivalences (antisymmetric relation).\n";
+        } else {
+            std::cout << "   Found " << non_trivial_count << " non-trivial equivalence class(es):\n";
+            for (const auto& cls : eq_classes) {
+                if (cls.size() > 1) {
+                    std::cout << "   - {";
+                    for (size_t i = 0; i < cls.size(); ++i) {
+                        if (i > 0) std::cout << " ~ ";
+                        std::cout << BitOps::to_string(cls[i], universe_size);
+                    }
+                    std::cout << "}\n";
+                }
+            }
+        }
+        
+        // 2. Extract and reduce extensions
+        auto extensions = extract_extensions(matrix, universe_size);
+        auto minimal_extensions = transitive_reduction(extensions, matrix);
+        
+        std::cout << "\n2. MINIMAL GENERATING EXTENSIONS (beyond monotonicity):\n";
+        std::cout << "   Total extensions: " << extensions.size() << "\n";
+        std::cout << "   After transitive reduction: " << minimal_extensions.size() << "\n\n";
+        
+        if (minimal_extensions.empty()) {
+            std::cout << "   The relation equals the minimal monotonic relation (subset ordering).\n";
+        } else {
+            std::cout << "   The relation is generated by monotonicity plus:\n";
+            for (const auto& ext : minimal_extensions) {
+                std::cout << "   - " << BitOps::to_string(ext.from, universe_size) 
+                          << " ≤ " << BitOps::to_string(ext.to, universe_size) << "\n";
+            }
+        }
+        
+        // 3. Summary statistics
+        std::cout << "\n3. SUMMARY:\n";
+        std::cout << "   Universe size: " << universe_size << "\n";
+        std::cout << "   Powerset size: " << ps << "\n";
+        std::cout << "   Equivalence classes: " << eq_classes.size() 
+                  << " (" << non_trivial_count << " non-trivial)\n";
+        std::cout << "   Minimal generators: " << minimal_extensions.size() << " extension(s)\n";
+        
+        // 4. Plain English attempt
+        std::cout << "\n4. PLAIN ENGLISH:\n";
+        if (minimal_extensions.empty() && non_trivial_count == 0) {
+            std::cout << "   \"The relation is exactly the subset ordering.\"\n";
+        } else {
+            std::cout << "   \"The relation extends subset ordering";
+            if (non_trivial_count > 0) {
+                std::cout << " by treating some non-subset pairs as equivalent";
+            }
+            if (!minimal_extensions.empty()) {
+                std::cout << " with " << minimal_extensions.size() << " additional ordering(s)";
+            }
+            std::cout << ".\"\n";
+        }
+    }
+}
+
+// ============================================================
 //  PartitionEnumerator - Generate all partitions of a set
 // ============================================================
 //  Uses recursive algorithm based on Stirling numbers
@@ -680,7 +863,8 @@ class SolverWorker {
     std::atomic<int>& tasks_completed;
     std::mutex& io_mutex;
     
-    static constexpr unsigned int SOLVER_TIMEOUT_MS = 5000;  // Check stop flag every 5 seconds
+    // 1 hour timeout per task - drop and move on if exceeded
+    static constexpr unsigned int SOLVER_TIMEOUT_MS = 3600000;
 
 public:
     SolverWorker(int id, int n, TaskQueue& q, GlobalStopFlag& sf, 
@@ -699,6 +883,11 @@ public:
             // Create fresh solver for this task
             z3::solver solver(local_ctx);
             
+            // Set timeout - drop and move on after this time
+            z3::params p(local_ctx);
+            p.set("timeout", SOLVER_TIMEOUT_MS);
+            solver.set(p);
+            
             // Encode common axioms
             encoder.encode_common_axioms(solver);
             
@@ -707,10 +896,15 @@ public:
             encoder.encode_not_dilation(solver, task.partition2);
             encoder.encode_A2D(solver, task.partition1, task.partition2);
             
-            // Solve with periodic interruption check
-            z3::check_result result = solve_with_interrupt_check(solver);
+            // Solve (single attempt with long timeout)
+            z3::check_result result = solver.check();
             
-            if (result == z3::sat && !stop_flag.should_stop()) {
+            // Check for early termination by another worker
+            if (stop_flag.should_stop()) {
+                return;
+            }
+            
+            if (result == z3::sat) {
                 // Extract matrix before reporting (model is context-dependent)
                 z3::model m = solver.get_model();
                 int ps = local_vars.size();
@@ -731,32 +925,15 @@ public:
                 return;
             }
             
-            // Task completed (SAT found by this worker, UNSAT, or stopped)
+            // Task completed (UNSAT or TIMEOUT) - move on to next task
             int completed = ++tasks_completed;
             if (!stop_flag.should_stop()) {
                 std::lock_guard<std::mutex> lock(io_mutex);
                 std::cout << "[Worker " << worker_id << "] Task " << task.id 
-                          << " completed (" << (result == z3::unsat ? "UNSAT" : "interrupted")
+                          << " completed (" << (result == z3::unsat ? "UNSAT" : "TIMEOUT")
                           << "). Progress: " << completed << " tasks done.\n";
             }
         }
-    }
-
-private:
-    z3::check_result solve_with_interrupt_check(z3::solver& s) {
-        // Use solver parameters for timeout-based checking
-        z3::params p(s.ctx());
-        p.set("timeout", SOLVER_TIMEOUT_MS);
-        s.set(p);
-        
-        while (!stop_flag.should_stop()) {
-            z3::check_result result = s.check();
-            if (result == z3::sat || result == z3::unsat) {
-                return result;
-            }
-            // result == z3::unknown means timeout, check stop flag and retry
-        }
-        return z3::unknown;  // Stopped by flag
     }
 };
 
@@ -837,8 +1014,29 @@ public:
         std::cout << "Partition I1: " << BitOps::partition_to_string(task.partition1, n) << "\n";
         std::cout << "Partition I2: " << BitOps::partition_to_string(task.partition2, n) << "\n";
         
-        // Display matrix
-        std::cout << "\nBoolean Matrix R[i][j] (1 means subset_i <= subset_j):\n\n";
+        // Compute minimal monotonic relation (i ⊆ j)
+        std::vector<std::vector<bool>> minimal(ps, std::vector<bool>(ps, false));
+        for (int i = 0; i < ps; ++i) {
+            for (int j = 0; j < ps; ++j) {
+                minimal[i][j] = BitOps::is_subset(i, j);
+            }
+        }
+        
+        // Count extensions beyond minimal
+        int extension_count = 0;
+        for (int i = 0; i < ps; ++i) {
+            for (int j = 0; j < ps; ++j) {
+                if (matrix[i][j] && !minimal[i][j]) {
+                    extension_count++;
+                }
+            }
+        }
+        
+        // Display matrix with highlighting
+        std::cout << "\nBoolean Matrix R[i][j]:\n";
+        std::cout << "  '1' = true (required by monotonicity: i ⊆ j)\n";
+        std::cout << "  '+' = true (EXTENSION beyond minimal monotonic relation)\n";
+        std::cout << "  '.' = false\n\n";
         
         int col_width = (ps > 10) ? 3 : 2;
         
@@ -853,17 +1051,32 @@ public:
         }
         std::cout << "\n";
         
-        // Data rows
+        // Data rows with highlighting
         for (int i = 0; i < ps; ++i) {
             std::cout << std::setw(3) << i << " | ";
             for (int j = 0; j < ps; ++j) {
-                std::cout << std::setw(col_width) << (matrix[i][j] ? "1" : ".");
+                char symbol;
+                if (matrix[i][j]) {
+                    // True entry: check if it's required by monotonicity or an extension
+                    symbol = minimal[i][j] ? '1' : '+';
+                } else {
+                    // False entry: check if this violates monotonicity (should not happen)
+                    symbol = minimal[i][j] ? '!' : '.';
+                }
+                std::cout << std::setw(col_width) << symbol;
             }
             std::cout << " | " << BitOps::to_string(i, n) << "\n";
         }
         
+        // Summary of extensions
+        std::cout << "\nExtensions beyond minimal monotonic relation: " 
+                  << extension_count << " entries (marked with '+')\n";
+        
         // Verify solution
         verify_solution(matrix, task, n);
+        
+        // Natural language description (decoupled analysis)
+        ModelAnalyzer::describe_model(matrix, n);
     }
 
 private:

@@ -1,0 +1,753 @@
+===========================================
+   EXHAUSTIVE Parallel Frame Finder (Z3)
+===========================================
+
+Universe size: 4 (Omega = {0..3})
+Powerset size: 16 subsets
+Threads: 16
+
+Number of partitions (Bell(4)): 15
+Number of partition pairs to search: 210
+
+Generating partition pairs for universe size 4...
+Generated 210 partition pairs
+Using 16 worker threads
+
+[Worker 12] Task 13 done (UNSAT). Progress: 1/210
+[Worker 11] Task 5 SAT - solution collected (total: 1)
+[Worker 11] Task 5 done (SAT). Progress: 2/210
+[Worker 8] Task 10 done (UNSAT). Progress: 3/210
+[Worker 5] Task 6 done (UNSAT). Progress: 4/210
+[Worker 1] Task 0 done (UNSAT). Progress: 5/210
+[Worker 15] Task 9 done (UNSAT). Progress: 6/210
+[Worker 3] Task 3 done (UNSAT). Progress: 7/210
+[Worker 0] Task 2 SAT - solution collected (total: 2)
+[Worker 0] Task 2 done (SAT). Progress: 8/210
+[Worker 10] Task 11 done (UNSAT). Progress: 9/210
+[Worker 6] Task 1 done (UNSAT). Progress: 10/210
+[Worker 2] Task 4 done (UNSAT). Progress: 11/210
+[Worker 14] Task 8 done (UNSAT). Progress: 12/210
+[Worker 13] Task 7 SAT - solution collected (total: 3)
+[Worker 13] Task 7 done (SAT). Progress: 13/210
+[Worker 9] Task 15 done (UNSAT). Progress: 14/210
+[Worker 4] Task 12 done (UNSAT). Progress: 15/210
+[Worker 7] Task 14 done (UNSAT). Progress: 16/210
+[Worker 12] Task 16 done (UNSAT). Progress: 17/210
+[Worker 8] Task 18 done (UNSAT). Progress: 18/210
+[Worker 5] Task 19 done (UNSAT). Progress: 19/210
+[Worker 11] Task 17 done (UNSAT). Progress: 20/210
+[Worker 6] Task 25 done (UNSAT). Progress: 21/210
+[Worker 15] Task 21 done (UNSAT). Progress: 22/210
+[Worker 10] Task 24 done (UNSAT). Progress: 23/210
+[Worker 2] Task 26 done (UNSAT). Progress: 24/210
+[Worker 1] Task 20 done (UNSAT). Progress: 25/210
+[Worker 3] Task 22 done (UNSAT). Progress: 26/210
+[Worker 9] Task 29 done (UNSAT). Progress: 27/210
+[Worker 4] Task 30 done (UNSAT). Progress: 28/210
+[Worker 13] Task 28 done (UNSAT). Progress: 29/210
+[Worker 0] Task 23 done (UNSAT). Progress: 30/210
+[Worker 7] Task 31 done (UNSAT). Progress: 31/210
+[Worker 14] Task 27 done (UNSAT). Progress: 32/210
+[Worker 12] Task 32 done (UNSAT). Progress: 33/210
+[Worker 8] Task 33 done (UNSAT). Progress: 34/210
+[Worker 5] Task 36 done (UNSAT). Progress: 35/210
+[Worker 11] Task 34 done (UNSAT). Progress: 36/210
+[Worker 6] Task 35 done (UNSAT). Progress: 37/210
+[Worker 15] Task 37 done (UNSAT). Progress: 38/210
+[Worker 1] Task 40 done (UNSAT). Progress: 39/210
+[Worker 10] Task 38 done (UNSAT). Progress: 40/210
+[Worker 2] Task 39 done (UNSAT). Progress: 41/210
+[Worker 4] Task 43 done (UNSAT). Progress: 42/210
+[Worker 13] Task 44 done (UNSAT). Progress: 43/210
+[Worker 9] Task 42 done (UNSAT). Progress: 44/210
+[Worker 0] Task 45 done (UNSAT). Progress: 45/210
+[Worker 7] Task 46 done (UNSAT). Progress: 46/210
+[Worker 14] Task 47 SAT - solution collected (total: 4)
+[Worker 14] Task 47 done (SAT). Progress: 47/210
+[Worker 3] Task 41 done (UNSAT). Progress: 48/210
+[Worker 12] Task 48 done (UNSAT). Progress: 49/210
+[Worker 8] Task 49 SAT - solution collected (total: 5)
+[Worker 8] Task 49 done (SAT). Progress: 50/210
+[Worker 5] Task 50 done (UNSAT). Progress: 51/210
+[Worker 11] Task 51 done (UNSAT). Progress: 52/210
+[Worker 6] Task 52 done (UNSAT). Progress: 53/210
+[Worker 15] Task 53 done (UNSAT). Progress: 54/210
+[Worker 10] Task 55 done (UNSAT). Progress: 55/210
+[Worker 2] Task 56 done (UNSAT). Progress: 56/210
+[Worker 1] Task 54 done (UNSAT). Progress: 57/210
+[Worker 13] Task 58 done (UNSAT). Progress: 58/210
+[Worker 0] Task 60 done (UNSAT). Progress: 59/210
+[Worker 7] Task 61 done (UNSAT). Progress: 60/210
+[Worker 9] Task 59 done (UNSAT). Progress: 61/210
+[Worker 4] Task 57 done (UNSAT). Progress: 62/210
+[Worker 3] Task 63 done (UNSAT). Progress: 63/210
+[Worker 12] Task 64 done (UNSAT). Progress: 64/210
+[Worker 14] Task 62 done (UNSAT). Progress: 65/210
+[Worker 5] Task 66 done (UNSAT). Progress: 66/210
+[Worker 11] Task 67 done (UNSAT). Progress: 67/210
+[Worker 8] Task 65 done (UNSAT). Progress: 68/210
+[Worker 6] Task 68 done (UNSAT). Progress: 69/210
+[Worker 13] Task 73 done (UNSAT). Progress: 70/210
+[Worker 10] Task 70 done (UNSAT). Progress: 71/210
+[Worker 0] Task 74 done (UNSAT). Progress: 72/210
+[Worker 2] Task 71 done (UNSAT). Progress: 73/210
+[Worker 1] Task 72 done (UNSAT). Progress: 74/210
+[Worker 7] Task 75 done (UNSAT). Progress: 75/210
+[Worker 3] Task 78 done (UNSAT). Progress: 76/210
+[Worker 12] Task 79 done (UNSAT). Progress: 77/210
+[Worker 4] Task 77 done (UNSAT). Progress: 78/210
+[Worker 9] Task 76 done (UNSAT). Progress: 79/210
+[Worker 5] Task 81 done (UNSAT). Progress: 80/210
+[Worker 14] Task 80 done (UNSAT). Progress: 81/210
+[Worker 11] Task 82 done (UNSAT). Progress: 82/210
+[Worker 0] Task 87 SAT - solution collected (total: 6)
+[Worker 0] Task 87 done (SAT). Progress: 83/210
+[Worker 8] Task 83 done (UNSAT). Progress: 84/210
+[Worker 13] Task 85 done (UNSAT). Progress: 85/210
+[Worker 2] Task 88 done (UNSAT). Progress: 86/210
+[Worker 6] Task 84 done (UNSAT). Progress: 87/210
+[Worker 10] Task 86 done (UNSAT). Progress: 88/210
+[Worker 1] Task 89 done (UNSAT). Progress: 89/210
+[Worker 3] Task 91 SAT - solution collected (total: 7)
+[Worker 3] Task 91 done (SAT). Progress: 90/210
+[Worker 12] Task 92 done (UNSAT). Progress: 91/210
+[Worker 4] Task 93 done (UNSAT). Progress: 92/210
+[Worker 7] Task 90 done (UNSAT). Progress: 93/210
+[Worker 9] Task 94 done (UNSAT). Progress: 94/210
+[Worker 14] Task 96 done (UNSAT). Progress: 95/210
+[Worker 5] Task 95 done (UNSAT). Progress: 96/210
+[Worker 0] Task 98 done (UNSAT). Progress: 97/210
+[Worker 13] Task 100 done (UNSAT). Progress: 98/210
+[Worker 11] Task 97 done (UNSAT). Progress: 99/210
+[Worker 2] Task 101 done (UNSAT). Progress: 100/210
+[Worker 8] Task 99 done (UNSAT). Progress: 101/210
+[Worker 3] Task 105 done (UNSAT). Progress: 102/210
+[Worker 10] Task 103 done (UNSAT). Progress: 103/210
+[Worker 12] Task 106 done (UNSAT). Progress: 104/210
+[Worker 1] Task 104 done (UNSAT). Progress: 105/210
+[Worker 6] Task 102 done (UNSAT). Progress: 106/210
+[Worker 9] Task 109 done (UNSAT). Progress: 107/210
+[Worker 7] Task 108 done (UNSAT). Progress: 108/210
+[Worker 13] Task 113 done (UNSAT). Progress: 109/210
+[Worker 0] Task 112 done (UNSAT). Progress: 110/210
+[Worker 4] Task 107 done (UNSAT). Progress: 111/210
+[Worker 14] Task 110 done (UNSAT). Progress: 112/210
+[Worker 11] Task 114 done (UNSAT). Progress: 113/210
+[Worker 12] Task 119 done (UNSAT). Progress: 114/210
+[Worker 2] Task 115 SAT - solution collected (total: 8)
+[Worker 2] Task 115 done (SAT). Progress: 115/210
+[Worker 8] Task 116 done (UNSAT). Progress: 116/210
+[Worker 3] Task 117 done (UNSAT). Progress: 117/210
+[Worker 1] Task 120 done (UNSAT). Progress: 118/210
+[Worker 10] Task 118 SAT - solution collected (total: 9)
+[Worker 10] Task 118 done (SAT). Progress: 119/210
+[Worker 15] Task 69 done (UNSAT). Progress: 120/210
+[Worker 6] Task 121 done (UNSAT). Progress: 121/210
+[Worker 13] Task 124 done (UNSAT). Progress: 122/210
+[Worker 7] Task 123 done (UNSAT). Progress: 123/210
+[Worker 9] Task 122 done (UNSAT). Progress: 124/210
+[Worker 0] Task 125 done (UNSAT). Progress: 125/210
+[Worker 4] Task 126 done (UNSAT). Progress: 126/210
+[Worker 14] Task 127 done (UNSAT). Progress: 127/210
+[Worker 1] Task 133 done (UNSAT). Progress: 128/210
+[Worker 11] Task 128 done (UNSAT). Progress: 129/210
+[Worker 2] Task 130 done (UNSAT). Progress: 130/210
+[Worker 3] Task 132 done (UNSAT). Progress: 131/210
+[Worker 10] Task 134 done (UNSAT). Progress: 132/210
+[Worker 12] Task 129 done (UNSAT). Progress: 133/210
+[Worker 8] Task 131 done (UNSAT). Progress: 134/210
+[Worker 6] Task 136 done (UNSAT). Progress: 135/210
+[Worker 15] Task 135 done (UNSAT). Progress: 136/210
+[Worker 4] Task 140 done (UNSAT). Progress: 137/210
+[Worker 7] Task 138 done (UNSAT). Progress: 138/210
+[Worker 1] Task 143 done (UNSAT). Progress: 139/210
+[Worker 13] Task 137 done (UNSAT). Progress: 140/210
+[Worker 14] Task 142 done (UNSAT). Progress: 141/210
+[Worker 3] Task 146 done (UNSAT). Progress: 142/210
+[Worker 11] Task 145 done (UNSAT). Progress: 143/210
+[Worker 0] Task 141 done (UNSAT). Progress: 144/210
+[Worker 9] Task 139 done (UNSAT). Progress: 145/210
+[Worker 12] Task 148 done (UNSAT). Progress: 146/210
+[Worker 6] Task 150 done (UNSAT). Progress: 147/210
+[Worker 8] Task 149 done (UNSAT). Progress: 148/210
+[Worker 10] Task 147 done (UNSAT). Progress: 149/210
+[Worker 2] Task 144 done (UNSAT). Progress: 150/210
+[Worker 1] Task 154 done (UNSAT). Progress: 151/210
+[Worker 3] Task 157 done (UNSAT). Progress: 152/210
+[Worker 13] Task 155 done (UNSAT). Progress: 153/210
+[Worker 15] Task 151 done (UNSAT). Progress: 154/210
+[Worker 5] Task 111 done (UNSAT). Progress: 155/210
+[Worker 14] Task 156 done (UNSAT). Progress: 156/210
+[Worker 4] Task 152 done (UNSAT). Progress: 157/210
+[Worker 6] Task 162 done (UNSAT). Progress: 158/210
+[Worker 11] Task 158 done (UNSAT). Progress: 159/210
+[Worker 9] Task 160 done (UNSAT). Progress: 160/210
+[Worker 0] Task 159 done (UNSAT). Progress: 161/210
+[Worker 8] Task 163 done (UNSAT). Progress: 162/210
+[Worker 10] Task 164 done (UNSAT). Progress: 163/210
+[Worker 12] Task 161 done (UNSAT). Progress: 164/210
+[Worker 2] Task 165 done (UNSAT). Progress: 165/210
+[Worker 15] Task 169 done (UNSAT). Progress: 166/210
+[Worker 13] Task 168 done (UNSAT). Progress: 167/210
+[Worker 6] Task 173 done (UNSAT). Progress: 168/210
+[Worker 1] Task 166 done (UNSAT). Progress: 169/210
+[Worker 14] Task 171 done (UNSAT). Progress: 170/210
+[Worker 5] Task 170 done (UNSAT). Progress: 171/210
+[Worker 0] Task 176 done (UNSAT). Progress: 172/210
+[Worker 11] Task 174 done (UNSAT). Progress: 173/210
+[Worker 8] Task 177 done (UNSAT). Progress: 174/210
+[Worker 9] Task 175 done (UNSAT). Progress: 175/210
+[Worker 4] Task 172 done (UNSAT). Progress: 176/210
+[Worker 12] Task 179 done (UNSAT). Progress: 177/210
+[Worker 10] Task 178 done (UNSAT). Progress: 178/210
+[Worker 13] Task 182 done (UNSAT). Progress: 179/210
+[Worker 2] Task 180 done (UNSAT). Progress: 180/210
+[Worker 6] Task 183 done (UNSAT). Progress: 181/210
+[Worker 11] Task 188 done (UNSAT). Progress: 182/210
+[Worker 1] Task 184 done (UNSAT). Progress: 183/210
+[Worker 14] Task 185 done (UNSAT). Progress: 184/210
+[Worker 5] Task 186 done (UNSAT). Progress: 185/210
+[Worker 0] Task 187 done (UNSAT). Progress: 186/210
+[Worker 9] Task 190 done (UNSAT). Progress: 187/210
+[Worker 4] Task 191 done (UNSAT). Progress: 188/210
+[Worker 8] Task 189 done (UNSAT). Progress: 189/210
+[Worker 7] Task 153 done (UNSAT). Progress: 190/210
+[Worker 12] Task 192 done (UNSAT). Progress: 191/210
+[Worker 10] Task 193 done (UNSAT). Progress: 192/210
+[Worker 13] Task 194 done (UNSAT). Progress: 193/210
+[Worker 6] Task 196 done (UNSAT). Progress: 194/210
+[Worker 11] Task 197 done (UNSAT). Progress: 195/210
+[Worker 14] Task 199 done (UNSAT). Progress: 196/210
+[Worker 1] Task 198 done (UNSAT). Progress: 197/210
+[Worker 9] Task 202 done (UNSAT). Progress: 198/210
+[Worker 0] Task 201 done (UNSAT). Progress: 199/210
+[Worker 8] Task 204 done (UNSAT). Progress: 200/210
+[Worker 3] Task 167 done (UNSAT). Progress: 201/210
+[Worker 7] Task 205 done (UNSAT). Progress: 202/210
+[Worker 15] Task 181 done (UNSAT). Progress: 203/210
+[Worker 2] Task 195 done (UNSAT). Progress: 204/210
+[Worker 5] Task 200 done (UNSAT). Progress: 205/210
+[Worker 4] Task 203 done (UNSAT). Progress: 206/210
+[Worker 12] Task 206 done (UNSAT). Progress: 207/210
+[Worker 10] Task 207 done (UNSAT). Progress: 208/210
+[Worker 6] Task 209 done (UNSAT). Progress: 209/210
+[Worker 13] Task 208 done (UNSAT). Progress: 210/210
+
+=== EXHAUSTIVE SEARCH COMPLETE ===
+Total time: 31970 ms
+Tasks completed: 210/210
+Solutions found: 9
+
+=== ALL SOLUTIONS SUMMARY ===
+  TaskID     Extensions        MinGens
+--------------------------------------
+       5             50             11
+       2             56              5
+       7             48              8
+      47             44              7
+      49             49              5
+      87             57              6
+      91             48              7
+     115             61              7
+     118             44              7
+
+=== MINIMAL SOLUTION (smallest generator count) ===
+Task ID: 2
+Partition I1: [{0,1,2,3}]
+Partition I2: [{0,1}, {2,3}]
+Extension count: 56
+Minimal generator count: 5
+
+Boolean Matrix R[i][j]:
+  '1' = true (required by monotonicity: i ⊆ j)
+  '+' = true (EXTENSION beyond minimal monotonic relation)
+  '.' = false
+
+        0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15
+     --------------------------------------------------
+  0 |   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1 | {}
+  1 |   .  1  .  1  .  1  +  1  .  1  +  1  .  1  +  1 | {0}
+  2 |   .  .  1  1  .  +  1  1  .  +  1  1  .  +  1  1 | {1}
+  3 |   .  .  .  1  .  .  .  1  .  .  .  1  .  .  .  1 | {0,1}
+  4 |   .  .  .  +  1  1  1  1  .  +  +  +  1  1  1  1 | {2}
+  5 |   .  .  .  +  .  1  +  1  .  +  +  +  .  1  +  1 | {0,2}
+  6 |   .  .  .  +  .  +  1  1  .  +  +  +  .  +  1  1 | {1,2}
+  7 |   .  .  .  .  .  .  .  1  .  .  .  +  .  .  .  1 | {0,1,2}
+  8 |   .  .  .  +  +  +  +  +  1  1  1  1  1  1  1  1 | {3}
+  9 |   .  .  .  +  .  +  +  +  .  1  +  1  .  1  +  1 | {0,3}
+ 10 |   .  .  .  +  .  +  +  +  .  +  1  1  .  +  1  1 | {1,3}
+ 11 |   .  .  .  .  .  .  .  +  .  .  .  1  .  .  .  1 | {0,1,3}
+ 12 |   .  .  .  +  .  +  +  +  .  +  +  +  1  1  1  1 | {2,3}
+ 13 |   .  .  .  +  .  .  .  +  .  .  .  +  .  1  +  1 | {0,2,3}
+ 14 |   .  .  .  +  .  .  .  +  .  .  .  +  .  +  1  1 | {1,2,3}
+ 15 |   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  1 | {0,1,2,3}
+
+=== VERIFICATION ===
+Reflexivity: PASS
+Transitivity: PASS
+Monotonicity: PASS
+Non-triviality: PASS
+CSTP: PASS
+Strict CSTP: PASS
+Not Dilation (I1): PASS
+Not Dilation (I2): PASS
+
+=== NATURAL LANGUAGE DESCRIPTION ===
+
+1. EQUIVALENCE CLASSES (A ~ B means A ≤ B and B ≤ A):
+   Found 3 non-trivial equivalence class(es):
+   - {{0,2} ~ {1,2} ~ {0,3} ~ {1,3}}
+   - {{0,1,2} ~ {0,1,3}}
+   - {{0,2,3} ~ {1,2,3}}
+
+2. MINIMAL GENERATING EXTENSIONS (beyond monotonicity):
+   Total extensions: 56
+   After transitive reduction: 5
+
+   The relation is generated by monotonicity plus:
+   - {0,1,2} ≤ {0,1,3}
+   - {3} ≤ {2}
+   - {0,1,3} ≤ {0,1,2}
+   - {0,2,3} ≤ {1,2,3}
+   - {1,2,3} ≤ {0,2,3}
+
+3. SUMMARY:
+   Universe size: 4
+   Powerset size: 16
+   Equivalence classes: 11 (3 non-trivial)
+   Minimal generators: 5 extension(s)
+
+4. PLAIN ENGLISH:
+   "The relation extends subset ordering by treating some non-subset pairs as equivalent with 5 additional ordering(s)."
+
+=== SUCCESS ===
+Found 9 solutions out of 210 partition pairs.
+
+
+
+===========================================
+   Parallel Finite Frame Finder (Z3)
+===========================================
+
+Universe size: 5 (Omega = {0..4})
+Powerset size: 32 subsets
+Threads: 16
+
+Number of partitions (Bell(5)): 52
+Number of partition pairs to search: 2652
+
+Generating partition pairs for universe size 5...
+Generated 2652 partition pairs
+Using 16 worker threads
+
+[Worker 4] FOUND SOLUTION for task 5!
+
+=== SEARCH COMPLETE ===
+Total time: 17786 ms
+Tasks completed: 0/2652
+
+=== WINNING SOLUTION ===
+Task ID: 5
+Partition I1: [{0,1,2,3,4}]
+Partition I2: [{0,1,3}, {2,4}]
+
+Boolean Matrix R[i][j]:
+  '1' = true (required by monotonicity: i ⊆ j)
+  '+' = true (EXTENSION beyond minimal monotonic relation)
+  '.' = false
+
+       0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31
+     ------------------------------------------------------------------------------------------------
+  0 |   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1 | {}
+  1 |   .  1  .  1  .  1  .  1  .  1  .  1  .  1  .  1  .  1  +  1  +  1  +  1  +  1  +  1  +  1  +  1 | {0}
+  2 |   .  +  1  1  .  +  1  1  .  +  1  1  .  +  1  1  .  +  1  1  +  +  1  1  +  +  1  1  +  +  1  1 | {1}
+  3 |   .  +  .  1  .  +  .  1  .  +  .  1  .  +  .  1  .  +  +  1  +  +  +  1  +  +  +  1  +  +  +  1 | {0,1}
+  4 |   .  +  +  +  1  1  1  1  .  +  +  +  1  1  1  1  .  +  +  +  1  1  1  1  +  +  +  +  1  1  1  1 | {2}
+  5 |   .  +  .  +  .  1  .  1  .  +  .  +  .  1  .  1  .  +  +  +  +  1  +  1  +  +  +  +  +  1  +  1 | {0,2}
+  6 |   .  +  +  +  .  +  1  1  .  +  +  +  .  +  1  1  .  +  +  +  +  +  1  1  +  +  +  +  +  +  1  1 | {1,2}
+  7 |   .  +  .  +  .  +  .  1  .  +  .  +  .  +  .  1  .  +  +  +  +  +  +  1  +  +  +  +  +  +  +  1 | {0,1,2}
+  8 |   .  +  +  +  .  +  +  +  1  1  1  1  1  1  1  1  .  +  +  +  +  +  +  +  1  1  1  1  1  1  1  1 | {3}
+  9 |   .  +  .  +  .  +  .  +  .  1  .  1  .  1  .  1  .  +  +  +  +  +  +  +  +  1  +  1  +  1  +  1 | {0,3}
+ 10 |   .  +  +  +  .  +  +  +  .  +  1  1  .  +  1  1  .  +  +  +  +  +  +  +  +  +  1  1  +  +  1  1 | {1,3}
+ 11 |   .  +  .  +  .  +  .  +  .  +  .  1  .  +  .  1  .  +  +  +  +  +  +  +  +  +  +  1  +  +  +  1 | {0,1,3}
+ 12 |   .  +  +  +  .  +  +  +  .  +  +  +  1  1  1  1  .  +  +  +  +  +  +  +  +  +  +  +  1  1  1  1 | {2,3}
+ 13 |   .  +  .  +  .  +  .  +  .  +  .  +  .  1  .  1  .  +  +  +  +  +  +  +  +  +  +  +  +  1  +  1 | {0,2,3}
+ 14 |   .  +  +  +  .  +  +  +  .  +  +  +  .  +  1  1  .  +  +  +  +  +  +  +  +  +  +  +  +  +  1  1 | {1,2,3}
+ 15 |   .  +  .  +  .  +  .  +  .  +  .  +  .  +  .  1  .  +  +  +  +  +  +  +  +  +  +  +  +  +  +  1 | {0,1,2,3}
+ 16 |   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1 | {4}
+ 17 |   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  1  .  1  .  1  .  1  .  1  .  1  .  1  .  1 | {0,4}
+ 18 |   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  +  1  1  .  +  1  1  .  +  1  1  .  +  1  1 | {1,4}
+ 19 |   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  +  .  1  .  +  .  1  .  +  .  1  .  +  .  1 | {0,1,4}
+ 20 |   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  +  +  +  1  1  1  1  .  +  +  +  1  1  1  1 | {2,4}
+ 21 |   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  +  .  +  .  1  .  1  .  +  .  +  .  1  .  1 | {0,2,4}
+ 22 |   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  +  +  +  .  +  1  1  .  +  +  +  .  +  1  1 | {1,2,4}
+ 23 |   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  +  .  +  .  +  .  1  .  +  .  +  .  +  .  1 | {0,1,2,4}
+ 24 |   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  +  +  +  +  +  +  +  1  1  1  1  1  1  1  1 | {3,4}
+ 25 |   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  +  .  +  .  +  .  +  .  1  .  1  .  1  .  1 | {0,3,4}
+ 26 |   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  +  +  +  .  +  +  +  .  +  1  1  .  +  1  1 | {1,3,4}
+ 27 |   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  +  .  +  .  +  .  +  .  +  .  1  .  +  .  1 | {0,1,3,4}
+ 28 |   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  +  +  +  .  +  +  +  .  +  +  +  1  1  1  1 | {2,3,4}
+ 29 |   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  +  .  +  .  +  .  +  .  +  .  +  .  1  .  1 | {0,2,3,4}
+ 30 |   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  +  +  +  .  +  +  +  .  +  +  +  .  +  1  1 | {1,2,3,4}
+ 31 |   .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  +  .  +  .  +  .  +  .  +  .  +  .  +  .  1 | {0,1,2,3,4}
+
+Extensions beyond minimal monotonic relation: 337 entries (marked with '+')
+
+=== VERIFICATION ===
+Reflexivity: PASS
+Transitivity: PASS
+Monotonicity: PASS
+Non-triviality: PASS
+CSTP: PASS
+Strict CSTP: PASS
+Not Dilation (I1): PASS
+Not Dilation (I2): PASS
+
+=== NATURAL LANGUAGE DESCRIPTION ===
+
+1. EQUIVALENCE CLASSES (A ~ B means A ≤ B and B ≤ A):
+   Found 4 non-trivial equivalence class(es):
+   - {{0} ~ {0,1} ~ {0,2} ~ {0,1,2} ~ {0,3} ~ {0,1,3} ~ {0,2,3} ~ {0,1,2,3}}
+   - {{1} ~ {1,2} ~ {1,3} ~ {1,2,3}}
+   - {{0,4} ~ {0,1,4} ~ {0,2,4} ~ {0,1,2,4} ~ {0,3,4} ~ {0,1,3,4} ~ {0,2,3,4} ~ {0,1,2,3,4}}
+   - {{1,4} ~ {1,2,4} ~ {1,3,4} ~ {1,2,3,4}}
+
+2. MINIMAL GENERATING EXTENSIONS (beyond monotonicity):
+   Total extensions: 337
+   After transitive reduction: 1
+
+   The relation is generated by monotonicity plus:
+   - {3,4} ≤ {2,4}
+
+3. SUMMARY:
+   Universe size: 5
+   Powerset size: 32
+   Equivalence classes: 12 (4 non-trivial)
+   Minimal generators: 1 extension(s)
+
+4. PLAIN ENGLISH:
+   "The relation extends subset ordering by treating some non-subset pairs as equivalent with 1 additional ordering(s)."
+
+===========================================
+   EXHAUSTIVE Parallel Frame Finder (Z3)
+===========================================
+
+Universe size: 4 (Omega = {0..3})
+Powerset size: 16 subsets
+Threads: 16
+
+Number of partitions (Bell(4)): 15
+Number of partition pairs to search: 210
+
+Generating partition pairs for universe size 4...
+Generated 210 partition pairs
+Using 16 worker threads
+
+[Worker 3] Task 0 done (UNSAT). Progress: 1/210
+[Worker 7] Task 3 done (UNSAT). Progress: 2/210
+[Worker 4] Task 11 done (UNSAT). Progress: 3/210
+[Worker 6] Task 12 done (UNSAT). Progress: 4/210
+[Worker 0] Task 13 done (UNSAT). Progress: 5/210
+[Worker 10] Task 7 SAT - solution collected (total: 1)
+[Worker 10] Task 7 done (SAT). Progress: 6/210
+[Worker 12] Task 1 done (UNSAT). Progress: 7/210
+[Worker 13] Task 5 SAT - solution collected (total: 2)
+[Worker 13] Task 5 done (SAT). Progress: 8/210
+[Worker 14] Task 6 done (UNSAT). Progress: 9/210
+[Worker 2] Task 9 done (UNSAT). Progress: 10/210
+[Worker 11] Task 2 SAT - solution collected (total: 3)
+[Worker 11] Task 2 done (SAT). Progress: 11/210
+[Worker 1] Task 10 done (UNSAT). Progress: 12/210
+[Worker 15] Task 15 done (UNSAT). Progress: 13/210
+[Worker 5] Task 8 done (UNSAT). Progress: 14/210
+[Worker 9] Task 4 done (UNSAT). Progress: 15/210
+[Worker 8] Task 14 done (UNSAT). Progress: 16/210
+[Worker 3] Task 16 done (UNSAT). Progress: 17/210
+[Worker 7] Task 17 done (UNSAT). Progress: 18/210
+[Worker 6] Task 19 done (UNSAT). Progress: 19/210
+[Worker 4] Task 18 done (UNSAT). Progress: 20/210
+[Worker 12] Task 22 done (UNSAT). Progress: 21/210
+[Worker 0] Task 20 done (UNSAT). Progress: 22/210
+[Worker 10] Task 21 done (UNSAT). Progress: 23/210
+[Worker 14] Task 24 done (UNSAT). Progress: 24/210
+[Worker 2] Task 25 done (UNSAT). Progress: 25/210
+[Worker 13] Task 23 done (UNSAT). Progress: 26/210
+[Worker 11] Task 26 done (UNSAT). Progress: 27/210
+[Worker 5] Task 29 done (UNSAT). Progress: 28/210
+[Worker 9] Task 30 done (UNSAT). Progress: 29/210
+[Worker 15] Task 28 done (UNSAT). Progress: 30/210
+[Worker 3] Task 32 done (UNSAT). Progress: 31/210
+[Worker 8] Task 31 done (UNSAT). Progress: 32/210
+[Worker 12] Task 36 done (UNSAT). Progress: 33/210
+[Worker 7] Task 33 done (UNSAT). Progress: 34/210
+[Worker 0] Task 37 done (UNSAT). Progress: 35/210
+[Worker 1] Task 27 done (UNSAT). Progress: 36/210
+[Worker 4] Task 35 done (UNSAT). Progress: 37/210
+[Worker 6] Task 34 done (UNSAT). Progress: 38/210
+[Worker 10] Task 38 done (UNSAT). Progress: 39/210
+[Worker 14] Task 39 done (UNSAT). Progress: 40/210
+[Worker 2] Task 40 done (UNSAT). Progress: 41/210
+[Worker 5] Task 43 done (UNSAT). Progress: 42/210
+[Worker 3] Task 46 done (UNSAT). Progress: 43/210
+[Worker 7] Task 49 SAT - solution collected (total: 4)
+[Worker 7] Task 49 done (SAT). Progress: 44/210
+[Worker 9] Task 44 done (UNSAT). Progress: 45/210
+[Worker 4] Task 52 done (UNSAT). Progress: 46/210
+[Worker 11] Task 42 done (UNSAT). Progress: 47/210
+[Worker 12] Task 48 done (UNSAT). Progress: 48/210
+[Worker 8] Task 47 SAT - solution collected (total: 5)
+[Worker 8] Task 47 done (SAT). Progress: 49/210
+[Worker 6] Task 53 done (UNSAT). Progress: 50/210
+[Worker 15] Task 45 done (UNSAT). Progress: 51/210
+[Worker 0] Task 50 done (UNSAT). Progress: 52/210
+[Worker 1] Task 51 done (UNSAT). Progress: 53/210
+[Worker 13] Task 41 done (UNSAT). Progress: 54/210
+[Worker 2] Task 56 done (UNSAT). Progress: 55/210
+[Worker 10] Task 54 done (UNSAT). Progress: 56/210
+[Worker 14] Task 55 done (UNSAT). Progress: 57/210
+[Worker 5] Task 57 done (UNSAT). Progress: 58/210
+[Worker 4] Task 61 done (UNSAT). Progress: 59/210
+[Worker 3] Task 58 done (UNSAT). Progress: 60/210
+[Worker 12] Task 63 done (UNSAT). Progress: 61/210
+[Worker 7] Task 59 done (UNSAT). Progress: 62/210
+[Worker 9] Task 60 done (UNSAT). Progress: 63/210
+[Worker 8] Task 64 done (UNSAT). Progress: 64/210
+[Worker 6] Task 65 done (UNSAT). Progress: 65/210
+[Worker 2] Task 70 done (UNSAT). Progress: 66/210
+[Worker 11] Task 62 done (UNSAT). Progress: 67/210
+[Worker 0] Task 67 done (UNSAT). Progress: 68/210
+[Worker 4] Task 74 done (UNSAT). Progress: 69/210
+[Worker 1] Task 68 done (UNSAT). Progress: 70/210
+[Worker 10] Task 71 done (UNSAT). Progress: 71/210
+[Worker 15] Task 66 done (UNSAT). Progress: 72/210
+[Worker 14] Task 72 done (UNSAT). Progress: 73/210
+[Worker 5] Task 73 done (UNSAT). Progress: 74/210
+[Worker 12] Task 75 done (UNSAT). Progress: 75/210
+[Worker 3] Task 76 done (UNSAT). Progress: 76/210
+[Worker 9] Task 78 done (UNSAT). Progress: 77/210
+[Worker 7] Task 77 done (UNSAT). Progress: 78/210
+[Worker 6] Task 80 done (UNSAT). Progress: 79/210
+[Worker 8] Task 79 done (UNSAT). Progress: 80/210
+[Worker 2] Task 81 done (UNSAT). Progress: 81/210
+[Worker 4] Task 84 done (UNSAT). Progress: 82/210
+[Worker 5] Task 89 done (UNSAT). Progress: 83/210
+[Worker 11] Task 82 done (UNSAT). Progress: 84/210
+[Worker 1] Task 85 done (UNSAT). Progress: 85/210
+[Worker 10] Task 86 done (UNSAT). Progress: 86/210
+[Worker 15] Task 87 SAT - solution collected (total: 6)
+[Worker 15] Task 87 done (SAT). Progress: 87/210
+[Worker 3] Task 91 SAT - solution collected (total: 7)
+[Worker 3] Task 91 done (SAT). Progress: 88/210
+[Worker 14] Task 88 done (UNSAT). Progress: 89/210
+[Worker 0] Task 83 done (UNSAT). Progress: 90/210
+[Worker 6] Task 94 done (UNSAT). Progress: 91/210
+[Worker 12] Task 90 done (UNSAT). Progress: 92/210
+[Worker 9] Task 92 done (UNSAT). Progress: 93/210
+[Worker 7] Task 93 done (UNSAT). Progress: 94/210
+[Worker 2] Task 96 done (UNSAT). Progress: 95/210
+[Worker 8] Task 95 done (UNSAT). Progress: 96/210
+[Worker 4] Task 97 done (UNSAT). Progress: 97/210
+[Worker 5] Task 98 done (UNSAT). Progress: 98/210
+[Worker 1] Task 100 done (UNSAT). Progress: 99/210
+[Worker 10] Task 101 done (UNSAT). Progress: 100/210
+[Worker 11] Task 99 done (UNSAT). Progress: 101/210
+[Worker 0] Task 105 done (UNSAT). Progress: 102/210
+[Worker 14] Task 104 done (UNSAT). Progress: 103/210
+[Worker 6] Task 106 done (UNSAT). Progress: 104/210
+[Worker 3] Task 103 done (UNSAT). Progress: 105/210
+[Worker 15] Task 102 done (UNSAT). Progress: 106/210
+[Worker 7] Task 109 done (UNSAT). Progress: 107/210
+[Worker 13] Task 69 done (UNSAT). Progress: 108/210
+[Worker 12] Task 107 done (UNSAT). Progress: 109/210
+[Worker 9] Task 108 done (UNSAT). Progress: 110/210
+[Worker 2] Task 110 done (UNSAT). Progress: 111/210
+[Worker 1] Task 114 done (UNSAT). Progress: 112/210
+[Worker 5] Task 113 done (UNSAT). Progress: 113/210
+[Worker 4] Task 112 done (UNSAT). Progress: 114/210
+[Worker 14] Task 118 SAT - solution collected (total: 8)
+[Worker 14] Task 118 done (SAT). Progress: 115/210
+[Worker 6] Task 119 done (UNSAT). Progress: 116/210
+[Worker 11] Task 116 done (UNSAT). Progress: 117/210
+[Worker 10] Task 115 SAT - solution collected (total: 9)
+[Worker 10] Task 115 done (SAT). Progress: 118/210
+[Worker 0] Task 117 done (UNSAT). Progress: 119/210
+[Worker 15] Task 121 done (UNSAT). Progress: 120/210
+[Worker 3] Task 120 done (UNSAT). Progress: 121/210
+[Worker 13] Task 123 done (UNSAT). Progress: 122/210
+[Worker 7] Task 122 done (UNSAT). Progress: 123/210
+[Worker 2] Task 126 done (UNSAT). Progress: 124/210
+[Worker 12] Task 124 done (UNSAT). Progress: 125/210
+[Worker 9] Task 125 done (UNSAT). Progress: 126/210
+[Worker 1] Task 127 done (UNSAT). Progress: 127/210
+[Worker 14] Task 130 done (UNSAT). Progress: 128/210
+[Worker 5] Task 128 done (UNSAT). Progress: 129/210
+[Worker 4] Task 129 done (UNSAT). Progress: 130/210
+[Worker 6] Task 131 done (UNSAT). Progress: 131/210
+[Worker 15] Task 135 done (UNSAT). Progress: 132/210
+[Worker 11] Task 132 done (UNSAT). Progress: 133/210
+[Worker 10] Task 133 done (UNSAT). Progress: 134/210
+[Worker 13] Task 137 done (UNSAT). Progress: 135/210
+[Worker 0] Task 134 done (UNSAT). Progress: 136/210
+[Worker 3] Task 136 done (UNSAT). Progress: 137/210
+[Worker 7] Task 138 done (UNSAT). Progress: 138/210
+[Worker 9] Task 141 done (UNSAT). Progress: 139/210
+[Worker 12] Task 140 done (UNSAT). Progress: 140/210
+[Worker 1] Task 142 done (UNSAT). Progress: 141/210
+[Worker 2] Task 139 done (UNSAT). Progress: 142/210
+[Worker 6] Task 146 done (UNSAT). Progress: 143/210
+[Worker 14] Task 143 done (UNSAT). Progress: 144/210
+[Worker 4] Task 145 done (UNSAT). Progress: 145/210
+[Worker 13] Task 150 done (UNSAT). Progress: 146/210
+[Worker 15] Task 147 done (UNSAT). Progress: 147/210
+[Worker 11] Task 148 done (UNSAT). Progress: 148/210
+[Worker 5] Task 144 done (UNSAT). Progress: 149/210
+[Worker 10] Task 149 done (UNSAT). Progress: 150/210
+[Worker 0] Task 151 done (UNSAT). Progress: 151/210
+[Worker 2] Task 157 done (UNSAT). Progress: 152/210
+[Worker 1] Task 156 done (UNSAT). Progress: 153/210
+[Worker 9] Task 154 done (UNSAT). Progress: 154/210
+[Worker 12] Task 155 done (UNSAT). Progress: 155/210
+[Worker 3] Task 152 done (UNSAT). Progress: 156/210
+[Worker 8] Task 111 done (UNSAT). Progress: 157/210
+[Worker 4] Task 160 done (UNSAT). Progress: 158/210
+[Worker 6] Task 158 done (UNSAT). Progress: 159/210
+[Worker 14] Task 159 done (UNSAT). Progress: 160/210
+[Worker 11] Task 163 done (UNSAT). Progress: 161/210
+[Worker 15] Task 162 done (UNSAT). Progress: 162/210
+[Worker 5] Task 164 done (UNSAT). Progress: 163/210
+[Worker 13] Task 161 done (UNSAT). Progress: 164/210
+[Worker 1] Task 168 done (UNSAT). Progress: 165/210
+[Worker 9] Task 169 done (UNSAT). Progress: 166/210
+[Worker 12] Task 170 done (UNSAT). Progress: 167/210
+[Worker 0] Task 166 done (UNSAT). Progress: 168/210
+[Worker 10] Task 165 done (UNSAT). Progress: 169/210
+[Worker 3] Task 171 done (UNSAT). Progress: 170/210
+[Worker 11] Task 176 done (UNSAT). Progress: 171/210
+[Worker 6] Task 174 done (UNSAT). Progress: 172/210
+[Worker 4] Task 173 done (UNSAT). Progress: 173/210
+[Worker 8] Task 172 done (UNSAT). Progress: 174/210
+[Worker 14] Task 175 done (UNSAT). Progress: 175/210
+[Worker 15] Task 177 done (UNSAT). Progress: 176/210
+[Worker 0] Task 183 done (UNSAT). Progress: 177/210
+[Worker 12] Task 182 done (UNSAT). Progress: 178/210
+[Worker 3] Task 185 done (UNSAT). Progress: 179/210
+[Worker 10] Task 184 done (UNSAT). Progress: 180/210
+[Worker 5] Task 178 done (UNSAT). Progress: 181/210
+[Worker 1] Task 180 done (UNSAT). Progress: 182/210
+[Worker 13] Task 179 done (UNSAT). Progress: 183/210
+[Worker 6] Task 187 done (UNSAT). Progress: 184/210
+[Worker 14] Task 190 done (UNSAT). Progress: 185/210
+[Worker 4] Task 188 done (UNSAT). Progress: 186/210
+[Worker 11] Task 186 done (UNSAT). Progress: 187/210
+[Worker 15] Task 191 done (UNSAT). Progress: 188/210
+[Worker 12] Task 193 done (UNSAT). Progress: 189/210
+[Worker 5] Task 196 done (UNSAT). Progress: 190/210
+[Worker 8] Task 189 done (UNSAT). Progress: 191/210
+[Worker 7] Task 153 done (UNSAT). Progress: 192/210
+[Worker 0] Task 192 done (UNSAT). Progress: 193/210
+[Worker 3] Task 194 done (UNSAT). Progress: 194/210
+[Worker 2] Task 167 done (UNSAT). Progress: 195/210
+[Worker 6] Task 199 done (UNSAT). Progress: 196/210
+[Worker 11] Task 202 done (UNSAT). Progress: 197/210
+[Worker 1] Task 197 done (UNSAT). Progress: 198/210
+[Worker 13] Task 198 done (UNSAT). Progress: 199/210
+[Worker 12] Task 204 done (UNSAT). Progress: 200/210
+[Worker 4] Task 201 done (UNSAT). Progress: 201/210
+[Worker 5] Task 205 done (UNSAT). Progress: 202/210
+[Worker 9] Task 181 done (UNSAT). Progress: 203/210
+[Worker 14] Task 200 done (UNSAT). Progress: 204/210
+[Worker 10] Task 195 done (UNSAT). Progress: 205/210
+[Worker 8] Task 206 done (UNSAT). Progress: 206/210
+[Worker 0] Task 208 done (UNSAT). Progress: 207/210
+[Worker 3] Task 209 done (UNSAT). Progress: 208/210
+[Worker 15] Task 203 done (UNSAT). Progress: 209/210
+[Worker 7] Task 207 done (UNSAT). Progress: 210/210
+
+=== EXHAUSTIVE SEARCH COMPLETE ===
+Total time: 29713 ms
+Tasks completed: 210/210
+Solutions found: 9
+
+=== ALL SOLUTIONS SUMMARY ===
+  TaskID     Extensions        MinGens
+--------------------------------------
+       7             48              8
+       5             50             11
+       2             56              5
+      49             54              5
+      47             58              6
+      87             44              7
+      91             48              7
+     118             58              3
+     115             59              5
+
+=== MINIMAL SOLUTION (smallest generator count) ===
+Task ID: 118
+Partition I1: [{0,3}, {1,2}]
+Partition I2: [{0,2}, {1,3}]
+Extension count: 58
+Minimal generator count: 3
+
+Boolean Matrix R[i][j]:
+  '1' = true (required by monotonicity: i ⊆ j)
+  '+' = true (EXTENSION beyond minimal monotonic relation)
+  '.' = false
+
+       0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15
+     ------------------------------------------------
+  0 |   1  1  1  1  1  1  1  1  1  1  1  1  1  1  1  1 | {}
+  1 |   .  1  .  1  +  1  +  1  +  1  +  1  +  1  +  1 | {0}
+  2 |   .  .  1  1  +  +  1  1  .  +  1  1  +  +  1  1 | {1}
+  3 |   .  .  .  1  +  +  +  1  .  +  +  1  +  +  +  1 | {0,1}
+  4 |   .  .  .  +  1  1  1  1  .  +  +  +  1  1  1  1 | {2}
+  5 |   .  .  .  .  .  1  .  1  .  +  .  +  +  1  +  1 | {0,2}
+  6 |   .  .  .  +  +  +  1  1  .  +  +  +  +  +  1  1 | {1,2}
+  7 |   .  .  .  .  .  +  .  1  .  +  .  +  +  +  +  1 | {0,1,2}
+  8 |   .  .  .  .  .  +  .  +  1  1  1  1  1  1  1  1 | {3}
+  9 |   .  .  .  .  .  .  .  .  .  1  .  1  +  1  +  1 | {0,3}
+ 10 |   .  .  .  .  .  +  .  +  .  +  1  1  +  +  1  1 | {1,3}
+ 11 |   .  .  .  .  .  .  .  .  .  .  .  1  +  +  +  1 | {0,1,3}
+ 12 |   .  .  .  .  .  .  .  .  .  .  .  +  1  1  1  1 | {2,3}
+ 13 |   .  .  .  .  .  .  .  .  .  .  .  .  .  1  .  1 | {0,2,3}
+ 14 |   .  .  .  .  .  .  .  .  .  .  .  +  +  +  1  1 | {1,2,3}
+ 15 |   .  .  .  .  .  .  .  .  .  .  .  .  .  +  .  1 | {0,1,2,3}
+
+=== VERIFICATION ===
+Reflexivity: PASS
+Transitivity: PASS
+Monotonicity: PASS
+Non-triviality: PASS
+CSTP: PASS
+Strict CSTP: PASS
+Not Dilation (I1): PASS
+Not Dilation (I2): PASS
+
+=== NATURAL LANGUAGE DESCRIPTION ===
+
+1. EQUIVALENCE CLASSES (A ~ B means A ≤ B and B ≤ A):
+   Found 4 non-trivial equivalence class(es):
+   - {{0,1} ~ {2} ~ {1,2}}
+   - {{0,2} ~ {0,1,2}}
+   - {{0,1,3} ~ {2,3} ~ {1,2,3}}
+   - {{0,2,3} ~ {0,1,2,3}}
+
+2. MINIMAL GENERATING EXTENSIONS (beyond monotonicity):
+   Total extensions: 58
+   After transitive reduction: 3
+
+   The relation is generated by monotonicity plus:
+   - {0} ≤ {3}
+   - {0,1,2} ≤ {0,2}
+   - {0,1,2,3} ≤ {0,2,3}
+
+3. SUMMARY:
+   Universe size: 4
+   Powerset size: 16
+   Equivalence classes: 10 (4 non-trivial)
+   Minimal generators: 3 extension(s)
+
+4. PLAIN ENGLISH:
+   "The relation extends subset ordering by treating some non-subset pairs as equivalent with 3 additional ordering(s)."
+
+=== SUCCESS ===
+Found 9 solutions out of 210 partition pairs.

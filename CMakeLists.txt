@@ -28,9 +28,12 @@ add_executable(myproj_tests src/test.cpp)
 target_link_libraries(myproj_tests PRIVATE libz3 Threads::Threads)
 add_test( NAME myproj_basic_tests COMMAND myproj_tests)
 
-# add_executable(example_groups src/example_groups.cpp)
-# target_link_libraries(example_groups PRIVATE libz3)
-# add_test( NAME example_groups_tests COMMAND example_groups)
+add_executable(example_groups src/example_groups.cpp)
+target_link_libraries(example_groups PRIVATE libz3 Threads::Threads)
+add_test( NAME example_groups_tests COMMAND example_groups)
+
+add_executable(minimal_example src/minimal_example.cpp)
+target_link_libraries(minimal_example PRIVATE libz3 Threads::Threads)
 
 # Add Z3 include directories
 target_include_directories(myproj PRIVATE 
@@ -41,9 +44,13 @@ target_include_directories(myproj_tests PRIVATE
     ${CMAKE_SOURCE_DIR}/external/z3/src/api
     ${CMAKE_SOURCE_DIR}/external/z3/src/api/c++)
 
-# target_include_directories(example_groups PRIVATE 
-#     ${CMAKE_SOURCE_DIR}/external/z3/src/api
-#     ${CMAKE_SOURCE_DIR}/external/z3/src/api/c++)
+target_include_directories(example_groups PRIVATE 
+    ${CMAKE_SOURCE_DIR}/external/z3/src/api
+    ${CMAKE_SOURCE_DIR}/external/z3/src/api/c++)
+
+target_include_directories(minimal_example PRIVATE 
+    ${CMAKE_SOURCE_DIR}/external/z3/src/api
+    ${CMAKE_SOURCE_DIR}/external/z3/src/api/c++)
 
 # If you build Z3 as a DLL (Z3_BUILD_LIBZ3_SHARED=ON),
 # copy the DLL next to your exe so it runs from VS Code build folder.

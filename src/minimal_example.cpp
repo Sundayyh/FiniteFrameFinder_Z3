@@ -1,3 +1,13 @@
+// ============================================================
+//  Goal: for universe size = 4, find the Not Dilation and A2D
+//  model that is minimal extension of the monotone relation
+//  after transitivity reduction.
+//
+//  The tentative design is that we transform the above minimal
+//  extension into axiomatic contraints over z3 solvers.
+// ============================================================
+
+
 #include <iostream>
 #include <vector>
 #include <string>
@@ -852,73 +862,6 @@ public:
 };
 
 // ============================================================
-//  SolutionRecord - Stores a single solution with metadata
-// ============================================================
-
-struct SolutionRecord {
-    int task_id;
-    Task task;
-    std::vector<std::vector<bool>> matrix;
-    int extension_count;           // Total extensions beyond monotonicity
-    int minimal_generator_count;   // After transitive reduction
-};
-
-// ============================================================
-//  SolutionCollector - Collects all solutions (exhaustive search)
-// ============================================================
-
-class SolutionCollector {
-    std::mutex mtx;
-    std::vector<SolutionRecord> solutions;
-    int universe_size_stored = 0;
-
-public:
-    void add_solution(int task_id, const Task& task, 
-                      const std::vector<std::vector<bool>>& matrix,
-                      int universe_size) {
-        // Compute extension counts
-        auto extensions = ModelAnalyzer::extract_extensions(matrix, universe_size);
-        auto minimal = ModelAnalyzer::transitive_reduction(extensions, matrix);
-        
-        SolutionRecord record;
-        record.task_id = task_id;
-        record.task = task;
-        record.matrix = matrix;
-        record.extension_count = static_cast<int>(extensions.size());
-        record.minimal_generator_count = static_cast<int>(minimal.size());
-        
-        std::lock_guard<std::mutex> lock(mtx);
-        solutions.push_back(std::move(record));
-        universe_size_stored = universe_size;
-    }
-    
-    size_t count() const {
-        return solutions.size();
-    }
-    
-    const std::vector<SolutionRecord>& get_solutions() const {
-        return solutions;
-    }
-    
-    int get_universe_size() const {
-        return universe_size_stored;
-    }
-    
-    // Find the solution with the smallest minimal_generator_count
-    const SolutionRecord* find_minimal_solution() const {
-        if (solutions.empty()) return nullptr;
-        
-        const SolutionRecord* best = &solutions[0];
-        for (const auto& sol : solutions) {
-            if (sol.minimal_generator_count < best->minimal_generator_count) {
-                best = &sol;
-            }
-        }
-        return best;
-    }
-};
-
-// ============================================================
 //  SolverWorker - Worker thread that processes tasks
 // ============================================================
 
@@ -999,89 +942,6 @@ public:
                 std::cout << "[Worker " << worker_id << "] Task " << task.id 
                           << " completed (" << (result == z3::unsat ? "UNSAT" : "TIMEOUT")
                           << "). Progress: " << completed << " tasks done.\n";
-            }
-        }
-    }
-};
-
-// ============================================================
-//  ExhaustiveWorker - Worker that processes ALL tasks (no early stop)
-// ============================================================
-
-class ExhaustiveWorker {
-    int worker_id;
-    int universe_size;
-    TaskQueue& queue;
-    SolutionCollector& collector;
-    std::atomic<int>& tasks_completed;
-    std::atomic<int>& tasks_total;
-    std::mutex& io_mutex;
-    
-    // 1 hour timeout per task - drop and move on if exceeded
-    static constexpr unsigned int SOLVER_TIMEOUT_MS = 3600000;
-
-public:
-    ExhaustiveWorker(int id, int n, TaskQueue& q, SolutionCollector& sc,
-                     std::atomic<int>& tc, std::atomic<int>& tt, std::mutex& iom)
-        : worker_id(id), universe_size(n), queue(q), collector(sc),
-          tasks_completed(tc), tasks_total(tt), io_mutex(iom) {}
-    
-    void run() {
-        // Create thread-local Z3 context and variables
-        z3::context local_ctx;
-        FrameVariables local_vars(local_ctx, universe_size, /*silent=*/true);
-        AxiomEncoder encoder(local_vars, /*silent=*/true);
-        
-        Task task;
-        while (queue.try_pop(task)) {
-            // Create fresh solver for this task
-            z3::solver solver(local_ctx);
-            z3::params p(local_ctx);
-            p.set("timeout", SOLVER_TIMEOUT_MS);
-            solver.set(p);
-            
-            // Encode common axioms
-            encoder.encode_common_axioms(solver);
-            
-            // Encode partition-specific axioms
-            encoder.encode_not_dilation(solver, task.partition1);
-            encoder.encode_not_dilation(solver, task.partition2);
-            encoder.encode_A2D(solver, task.partition1, task.partition2);
-            
-            // Solve (single attempt with long timeout)
-            z3::check_result result = solver.check();
-            
-            if (result == z3::sat) {
-                // Extract matrix
-                z3::model m = solver.get_model();
-                int ps = local_vars.size();
-                std::vector<std::vector<bool>> matrix(ps, std::vector<bool>(ps));
-                for (int i = 0; i < ps; ++i) {
-                    for (int j = 0; j < ps; ++j) {
-                        matrix[i][j] = m.eval(local_vars.get_R(i, j)).is_true();
-                    }
-                }
-                
-                // Add to collector
-                collector.add_solution(task.id, task, matrix, universe_size);
-                
-                {
-                    std::lock_guard<std::mutex> lock(io_mutex);
-                    std::cout << "[Worker " << worker_id << "] Task " << task.id 
-                              << " SAT - solution collected (total: " << collector.count() << ")\n";
-                }
-            }
-            
-            // Task completed - move on to next task
-            int completed = ++tasks_completed;
-            int total = tasks_total.load();
-            
-            {
-                std::lock_guard<std::mutex> lock(io_mutex);
-                std::cout << "[Worker " << worker_id << "] Task " << task.id 
-                          << " done (" << (result == z3::sat ? "SAT" : 
-                                           result == z3::unsat ? "UNSAT" : "TIMEOUT")
-                          << "). Progress: " << completed << "/" << total << "\n";
             }
         }
     }
@@ -1613,284 +1473,17 @@ namespace WitnessExtractor {
 }
 
 // ============================================================
-//  ExhaustiveFrameFinder - Collects ALL solutions, finds minimal
-// ============================================================
-
-class ExhaustiveFrameFinder {
-    int universe_size;
-    int num_threads;
-    TaskQueue queue;
-    SolutionCollector collector;
-    std::vector<std::thread> workers;
-    std::atomic<int> tasks_completed{0};
-    std::atomic<int> tasks_total{0};
-    std::mutex io_mutex;
-
-public:
-    ExhaustiveFrameFinder(int n, int threads = 0)
-        : universe_size(n), 
-          num_threads(threads > 0 ? threads : std::thread::hardware_concurrency()) {
-        if (num_threads == 0) num_threads = 4;  // Fallback
-    }
-    
-    // Main entry point: exhaustively search all partition pairs
-    void find_all_frames() {
-        auto start_time = std::chrono::steady_clock::now();
-        
-        // Generate all partition pairs
-        std::cout << "Generating partition pairs for universe size " << universe_size << "...\n";
-        auto pairs = PartitionEnumerator::generate_partition_pairs(universe_size);
-        std::cout << "Generated " << pairs.size() << " partition pairs\n";
-        std::cout << "Using " << num_threads << " worker threads\n\n";
-        
-        tasks_total.store(static_cast<int>(pairs.size()));
-        
-        // Populate task queue
-        for (size_t i = 0; i < pairs.size(); ++i) {
-            queue.push(Task{static_cast<int>(i), pairs[i].first, pairs[i].second});
-        }
-        queue.mark_finished();
-        
-        // Launch workers
-        for (int i = 0; i < num_threads; ++i) {
-            workers.emplace_back([this, i]() {
-                ExhaustiveWorker worker(i, universe_size, queue, collector,
-                                        tasks_completed, tasks_total, io_mutex);
-                worker.run();
-            });
-        }
-        
-        // Wait for all workers
-        for (auto& t : workers) {
-            t.join();
-        }
-        
-        auto end_time = std::chrono::steady_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
-        
-        std::cout << "\n=== EXHAUSTIVE SEARCH COMPLETE ===\n";
-        std::cout << "Total time: " << duration.count() << " ms\n";
-        std::cout << "Tasks completed: " << tasks_completed.load() << "/" << pairs.size() << "\n";
-        std::cout << "Solutions found: " << collector.count() << "\n";
-    }
-    
-    // Get the solution collector
-    const SolutionCollector& get_collector() const {
-        return collector;
-    }
-    
-    // Display summary of all solutions
-    void display_summary() {
-        const auto& solutions = collector.get_solutions();
-        if (solutions.empty()) {
-            std::cout << "\nNo solutions found.\n";
-            return;
-        }
-        
-        std::cout << "\n=== ALL SOLUTIONS SUMMARY ===\n";
-        std::cout << std::setw(8) << "TaskID" 
-                  << std::setw(15) << "Extensions" 
-                  << std::setw(15) << "MinGens" << "\n";
-        std::cout << std::string(38, '-') << "\n";
-        
-        for (const auto& sol : solutions) {
-            std::cout << std::setw(8) << sol.task_id
-                      << std::setw(15) << sol.extension_count
-                      << std::setw(15) << sol.minimal_generator_count << "\n";
-        }
-    }
-    
-    // Display the minimal solution (smallest minimal_generator_count)
-    void display_minimal_solution() {
-        const SolutionRecord* best = collector.find_minimal_solution();
-        if (!best) {
-            std::cout << "\nNo solutions found.\n";
-            return;
-        }
-        
-        int n = collector.get_universe_size();
-        int ps = static_cast<int>(best->matrix.size());
-        
-        std::cout << "\n=== MINIMAL SOLUTION (smallest generator count) ===\n";
-        std::cout << "Task ID: " << best->task_id << "\n";
-        std::cout << "Partition I1: " << BitOps::partition_to_string(best->task.partition1, n) << "\n";
-        std::cout << "Partition I2: " << BitOps::partition_to_string(best->task.partition2, n) << "\n";
-        std::cout << "Extension count: " << best->extension_count << "\n";
-        std::cout << "Minimal generator count: " << best->minimal_generator_count << "\n";
-        
-        // Compute minimal monotonic relation (i ⊆ j)
-        std::vector<std::vector<bool>> minimal(ps, std::vector<bool>(ps, false));
-        for (int i = 0; i < ps; ++i) {
-            for (int j = 0; j < ps; ++j) {
-                minimal[i][j] = BitOps::is_subset(i, j);
-            }
-        }
-        
-        // Display matrix with highlighting
-        std::cout << "\nBoolean Matrix R[i][j]:\n";
-        std::cout << "  '1' = true (required by monotonicity: i ⊆ j)\n";
-        std::cout << "  '+' = true (EXTENSION beyond minimal monotonic relation)\n";
-        std::cout << "  '.' = false\n\n";
-        
-        int col_width = (ps > 10) ? 3 : 2;
-        
-        // Header row
-        std::cout << "     ";
-        for (int j = 0; j < ps; ++j) {
-            std::cout << std::setw(col_width) << j;
-        }
-        std::cout << "\n     ";
-        for (int j = 0; j < ps; ++j) {
-            for (int w = 0; w < col_width; ++w) std::cout << "-";
-        }
-        std::cout << "\n";
-        
-        // Data rows with highlighting
-        for (int i = 0; i < ps; ++i) {
-            std::cout << std::setw(3) << i << " | ";
-            for (int j = 0; j < ps; ++j) {
-                char symbol;
-                if (best->matrix[i][j]) {
-                    symbol = minimal[i][j] ? '1' : '+';
-                } else {
-                    symbol = minimal[i][j] ? '!' : '.';
-                }
-                std::cout << std::setw(col_width) << symbol;
-            }
-            std::cout << " | " << BitOps::to_string(i, n) << "\n";
-        }
-        
-        // Verify solution
-        verify_solution(best->matrix, best->task, n);
-        
-        // Natural language description
-        ModelAnalyzer::describe_model(best->matrix, n);
-    }
-
-private:
-    void verify_solution(const std::vector<std::vector<bool>>& matrix, 
-                         const Task& task, int n) {
-        int ps = static_cast<int>(matrix.size());
-        std::cout << "\n=== VERIFICATION ===\n";
-        
-        // Check reflexivity
-        bool reflexive_ok = true;
-        for (int i = 0; i < ps; ++i) {
-            if (!matrix[i][i]) { reflexive_ok = false; break; }
-        }
-        std::cout << "Reflexivity: " << (reflexive_ok ? "PASS" : "FAIL") << "\n";
-        
-        // Check transitivity
-        bool transitive_ok = true;
-        for (int i = 0; i < ps && transitive_ok; ++i) {
-            for (int j = 0; j < ps && transitive_ok; ++j) {
-                for (int k = 0; k < ps && transitive_ok; ++k) {
-                    if (matrix[i][j] && matrix[j][k] && !matrix[i][k]) {
-                        transitive_ok = false;
-                    }
-                }
-            }
-        }
-        std::cout << "Transitivity: " << (transitive_ok ? "PASS" : "FAIL") << "\n";
-        
-        // Check monotonicity
-        bool monotonicity_ok = true;
-        for (int i = 0; i < ps; ++i) {
-            for (int j = 0; j < ps; ++j) {
-                if (BitOps::is_subset(i, j) && !matrix[i][j]) {
-                    monotonicity_ok = false;
-                }
-            }
-        }
-        std::cout << "Monotonicity: " << (monotonicity_ok ? "PASS" : "FAIL") << "\n";
-        
-        // Check non-triviality
-        int full_set = ps - 1;
-        bool non_triviality_ok = !matrix[full_set][0];
-        std::cout << "Non-triviality: " << (non_triviality_ok ? "PASS" : "FAIL") << "\n";
-        
-        // Check CSTP
-        bool cstp_ok = true;
-        for (int A = 0; A < ps && cstp_ok; ++A) {
-            for (int B = 0; B < ps && cstp_ok; ++B) {
-                if (BitOps::set_intersection(A, B) != 0) continue;
-                for (int C = 0; C < ps && cstp_ok; ++C) {
-                    for (int D = 0; D < ps && cstp_ok; ++D) {
-                        if (BitOps::set_intersection(C, D) != 0) continue;
-                        int AB = BitOps::set_union(A, B);
-                        int CD = BitOps::set_union(C, D);
-                        if (matrix[A][C] && matrix[B][D] && !matrix[AB][CD]) {
-                            cstp_ok = false;
-                        }
-                    }
-                }
-            }
-        }
-        std::cout << "CSTP: " << (cstp_ok ? "PASS" : "FAIL") << "\n";
-        
-        // Check Strict CSTP
-        bool strict_cstp_ok = true;
-        for (int A = 0; A < ps && strict_cstp_ok; ++A) {
-            for (int B = 0; B < ps && strict_cstp_ok; ++B) {
-                if (BitOps::set_intersection(A, B) != 0) continue;
-                for (int C = 0; C < ps && strict_cstp_ok; ++C) {
-                    for (int D = 0; D < ps && strict_cstp_ok; ++D) {
-                        if (BitOps::set_intersection(C, D) != 0) continue;
-                        int AB = BitOps::set_union(A, B);
-                        int CD = BitOps::set_union(C, D);
-                        bool A_less_C = matrix[A][C] && !matrix[C][A];
-                        bool B_less_D = matrix[B][D] && !matrix[D][B];
-                        bool AB_less_CD = matrix[AB][CD] && !matrix[CD][AB];
-                        if (A_less_C && B_less_D && !AB_less_CD) {
-                            strict_cstp_ok = false;
-                        }
-                    }
-                }
-            }
-        }
-        std::cout << "Strict CSTP: " << (strict_cstp_ok ? "PASS" : "FAIL") << "\n";
-        
-        // Check Not Dilation for I1 and I2
-        auto check_not_dilation = [&](const std::vector<int>& partition, const std::string& name) {
-            bool ok = true;
-            for (int E = 0; E < ps && ok; ++E) {
-                for (int F = 0; F < ps && ok; ++F) {
-                    bool EF_comparable = matrix[E][F] || matrix[F][E];
-                    if (!EF_comparable) continue;
-                    
-                    bool exists_comparable = false;
-                    for (int C : partition) {
-                        int EC = BitOps::set_intersection(E, C);
-                        int FC = BitOps::set_intersection(F, C);
-                        if (matrix[EC][FC] || matrix[FC][EC]) {
-                            exists_comparable = true;
-                            break;
-                        }
-                    }
-                    if (!exists_comparable) ok = false;
-                }
-            }
-            std::cout << "Not Dilation (" << name << "): " << (ok ? "PASS" : "FAIL") << "\n";
-        };
-        
-        check_not_dilation(task.partition1, "I1");
-        check_not_dilation(task.partition2, "I2");
-    }
-};
-
-// ============================================================
-//  Main - EXHAUSTIVE Frame Finding for Universe Size 4
+//  Main - Parallel Frame Finding for Universe Size 4
 // ============================================================
 //  Searches all 15*14 = 210 partition pairs using multiple threads
-//  Collects ALL solutions and finds the one with minimal extensions
 // ============================================================
 
 int main(int argc, char* argv[]) {
-    // Configuration - hardcoded for exhaustive search
+    // Configuration
     int universe_size = 4;  // {0, 1, 2, 3}
-    int num_threads = 16;   // 16 threads as specified
+    int num_threads = 8;    // Default to 8 threads
     
-    // Allow override from command line
+    // Parse command line arguments
     if (argc >= 2) {
         universe_size = std::atoi(argv[1]);
         if (universe_size < 2 || universe_size > 6) {
@@ -1902,12 +1495,12 @@ int main(int argc, char* argv[]) {
         num_threads = std::atoi(argv[2]);
         if (num_threads < 1) {
             num_threads = std::thread::hardware_concurrency();
-            if (num_threads == 0) num_threads = 16;
+            if (num_threads == 0) num_threads = 4;
         }
     }
     
     std::cout << "===========================================\n";
-    std::cout << "   EXHAUSTIVE Parallel Frame Finder (Z3)\n";
+    std::cout << "   Parallel Finite Frame Finder (Z3)\n";
     std::cout << "===========================================\n\n";
     std::cout << "Universe size: " << universe_size << " (Omega = {0.." << (universe_size-1) << "})\n";
     std::cout << "Powerset size: " << (1 << universe_size) << " subsets\n";
@@ -1921,26 +1514,19 @@ int main(int argc, char* argv[]) {
     std::cout << "Number of partitions (Bell(" << universe_size << ")): " << num_partitions << "\n";
     std::cout << "Number of partition pairs to search: " << num_pairs << "\n\n";
     
-    // Run exhaustive parallel search
-    ExhaustiveFrameFinder finder(universe_size, num_threads);
+    // Run parallel search
+    ParallelFrameFinder finder(universe_size, num_threads);
     
-    finder.find_all_frames();
+    bool found = finder.find_frame();
     
-    // Display summary of all solutions
-    finder.display_summary();
-    
-    // Display the minimal solution
-    finder.display_minimal_solution();
-    
-    const auto& collector = finder.get_collector();
-    if (collector.count() > 0) {
+    if (found) {
+        finder.display_result();
         std::cout << "\n=== SUCCESS ===\n";
-        std::cout << "Found " << collector.count() << " solutions out of " << num_pairs << " partition pairs.\n";
-        return 0;
     } else {
         std::cout << "\n=== NO SOLUTION FOUND ===\n";
         std::cout << "Searched all " << num_pairs << " partition pairs - no frame exists.\n";
-        return 1;
     }
+    
+    return found ? 0 : 1;
 }
 
