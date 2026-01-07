@@ -3,9 +3,16 @@
 #include <string>
 #include <sstream>
 #include <cassert>
+#include <cstdlib>
 #include <iomanip>
 #include <map>
 #include <algorithm>
+#include <thread>
+#include <mutex>
+#include <atomic>
+#include <queue>
+#include <condition_variable>
+#include <chrono>
 #include "z3++.h"
 
 // ============================================================
@@ -147,6 +154,93 @@ namespace BitOps {
         
         return field;
     }
+
+    // Convert partition to string representation
+    std::string partition_to_string(const std::vector<int>& partition, int n) {
+        std::ostringstream oss;
+        oss << "[";
+        for (size_t i = 0; i < partition.size(); ++i) {
+            if (i > 0) oss << ", ";
+            oss << to_string(partition[i], n);
+        }
+        oss << "]";
+        return oss.str();
+    }
+}
+
+// ============================================================
+//  PartitionEnumerator - Generate all partitions of a set
+// ============================================================
+//  Uses recursive algorithm based on Stirling numbers
+// ============================================================
+
+namespace PartitionEnumerator {
+    
+    // Helper: recursively generate all partitions
+    // elements[idx:] are elements yet to be assigned
+    // current_partition holds the cells being built
+    void generate_partitions_recursive(
+        int n,
+        int idx,
+        std::vector<int>& current_partition,
+        std::vector<std::vector<int>>& all_partitions
+    ) {
+        if (idx == n) {
+            // All elements assigned - record this partition
+            // Filter out empty cells
+            std::vector<int> result;
+            for (int cell : current_partition) {
+                if (cell != 0) {
+                    result.push_back(cell);
+                }
+            }
+            if (!result.empty()) {
+                all_partitions.push_back(result);
+            }
+            return;
+        }
+        
+        int element_mask = 1 << idx;
+        
+        // Option 1: Add element to an existing cell
+        for (size_t i = 0; i < current_partition.size(); ++i) {
+            current_partition[i] |= element_mask;
+            generate_partitions_recursive(n, idx + 1, current_partition, all_partitions);
+            current_partition[i] ^= element_mask;  // Remove element
+        }
+        
+        // Option 2: Create a new cell with this element
+        current_partition.push_back(element_mask);
+        generate_partitions_recursive(n, idx + 1, current_partition, all_partitions);
+        current_partition.pop_back();
+    }
+    
+    // Generate all partitions of {0, 1, ..., n-1}
+    // Returns vector of partitions, where each partition is a vector of cell bitmasks
+    std::vector<std::vector<int>> generate_all_partitions(int n) {
+        std::vector<std::vector<int>> all_partitions;
+        std::vector<int> current_partition;
+        generate_partitions_recursive(n, 0, current_partition, all_partitions);
+        return all_partitions;
+    }
+    
+    // Generate all ordered pairs (I1, I2) where I1 != I2
+    // For n=4: Bell(4) = 15 partitions → 15*14 = 210 pairs
+    std::vector<std::pair<std::vector<int>, std::vector<int>>> 
+    generate_partition_pairs(int n) {
+        auto partitions = generate_all_partitions(n);
+        std::vector<std::pair<std::vector<int>, std::vector<int>>> pairs;
+        
+        for (size_t i = 0; i < partitions.size(); ++i) {
+            for (size_t j = 0; j < partitions.size(); ++j) {
+                if (i != j) {
+                    pairs.push_back({partitions[i], partitions[j]});
+                }
+            }
+        }
+        
+        return pairs;
+    }
 }
 
 // ============================================================
@@ -162,7 +256,7 @@ class FrameVariables {
     std::vector<std::vector<z3::expr>> R;  // R[i][j] = (subset_i ≤ subset_j)
 
 public:
-    FrameVariables(z3::context& c, int universe_size)
+    FrameVariables(z3::context& c, int universe_size, bool silent = false)
         : ctx(c), n(universe_size), powerset_size(1 << universe_size) {
         
         // Create boolean matrix R[i][j]
@@ -173,7 +267,9 @@ public:
                 R[i].push_back(ctx.bool_const(var_name.c_str()));
             }
         }
-        std::cout << "Created " << (powerset_size * powerset_size) << " boolean variables\n";
+        if (!silent) {
+            std::cout << "Created " << (powerset_size * powerset_size) << " boolean variables\n";
+        }
     }
 
     // Accessors
@@ -188,17 +284,19 @@ public:
 //  AxiomEncoder - Methods to encode axioms into constraints
 // ============================================================
 //  Each axiom is a separate method; call directly as needed
+//  Supports silent mode for parallel workers
 // ============================================================
 
 class AxiomEncoder {
     FrameVariables& vars;
+    bool silent;
 
 public:
-    AxiomEncoder(FrameVariables& v) : vars(v) {}
+    AxiomEncoder(FrameVariables& v, bool silent_mode = false) : vars(v), silent(silent_mode) {}
 
     // AXIOM: Transitivity - if i ≤ j and j ≤ k, then i ≤ k
     void encode_transitivity(z3::solver& s) {
-        std::cout << "  Encoding transitivity...\n";
+        if (!silent) std::cout << "  Encoding transitivity...\n";
         for (int i = 0; i < vars.size(); ++i) {
             for (int j = 0; j < vars.size(); ++j) {
                 for (int k = 0; k < vars.size(); ++k) {
@@ -211,7 +309,7 @@ public:
 
     // AXIOM: Monotonicity - subset inclusion implies ordering
     void encode_monotonicity(z3::solver& s) {
-        std::cout << "  Encoding monotonicity...\n";
+        if (!silent) std::cout << "  Encoding monotonicity...\n";
         for (int i = 0; i < vars.size(); ++i) {
             for (int j = 0; j < vars.size(); ++j) {
                 if (BitOps::is_subset(i, j)) {
@@ -223,7 +321,7 @@ public:
 
     // AXIOM: Non-triviality - it is not the case that the full set Omega and the empty set stand in the relation R.
     void encode_non_triviality(z3::solver& s) {
-        std::cout << "  Encoding non-triviality...\n";
+        if (!silent) std::cout << "  Encoding non-triviality...\n";
         int full_set = vars.size() - 1;  // Assuming full set is the last subset
         int empty_set = 0;                // Assuming empty set is the first subset
         s.add(!vars.get_R(full_set, empty_set));
@@ -231,7 +329,7 @@ public:
 
     // Axiom: Comparative Sure-thing Principle (CSTP) - for any disjoint subsets A, B and disjoint subsets C, D, if A ≤ C and B ≤ D, then A ∪ B ≤ C ∪ D.
     void encode_CSTP(z3::solver& s) {
-        std::cout << "  Encoding Comparative Sure-thing Principle (CSTP)...\n";
+        if (!silent) std::cout << "  Encoding Comparative Sure-thing Principle (CSTP)...\n";
         for (int A = 0; A < vars.size(); ++A) {
             for (int B = 0; B < vars.size(); ++B) {
                 if (BitOps::set_intersection(A, B) != 0) continue; // A and B must be disjoint
@@ -250,7 +348,7 @@ public:
 
     // Axiom: Strict CSTP - for any subsets A, B, C, D, if A ∩ B = ∅ and C ∩ D = ∅, then (A < C and B < D) implies (A ∪ B) < (C ∪ D) where A < B means that A ≤ B and NOT B ≤ A.
     void encode_strict_CSTP(z3::solver& s) {
-        std::cout << "  Encoding Strict Comparative Sure-thing Principle (Strict CSTP)...\n";
+        if (!silent) std::cout << "  Encoding Strict Comparative Sure-thing Principle (Strict CSTP)...\n";
         for (int A = 0; A < vars.size(); ++A) {
             for (int B = 0; B < vars.size(); ++B) {
                 if (BitOps::set_intersection(A, B) != 0) continue; // A and B must be disjoint
@@ -270,15 +368,27 @@ public:
         }
     }
 
+    // Encode all common (partition-independent) axioms at once
+    void encode_common_axioms(z3::solver& s) {
+        encode_transitivity(s);
+        encode_monotonicity(s);
+        encode_non_triviality(s);
+        encode_CSTP(s);
+        encode_strict_CSTP(s);
+    }
+
     // Axiom: Not Dilation (Not DLT) - Dilation does not hold for the relation R with respect to a given partition of the universe Omega where dilation means that there is a pair of subsets E and F such that for every element C in the partition, E and F are R-comparable but (E∩C) and (F∩C) are not. Thus, Not Dilation: ∀E,F: comparable(E,F) → ∃C∈partition: comparable(E∩C, F∩C) where comparable(X,Y) means R[X][Y] ∨ R[Y][X].
     void encode_not_dilation(z3::solver& s, const std::vector<int>& partition) {
-        std::cout << "  Encoding Not Dilation (Not DLT)...\n";
+        if (!silent) std::cout << "  Encoding Not Dilation (Not DLT)...\n";
         
-        // Verify partition before encoding
-        if (!BitOps::verify_partition(partition, vars.universe_size())) {
-            std::cerr << "Invalid partition - aborting Not Dilation encoding\n";
-            return;
+        // Verify partition before encoding (silent verification)
+        int full_set = (1 << vars.universe_size()) - 1;
+        int union_all = 0;
+        for (int cell : partition) {
+            if (cell == 0) return;  // Invalid partition
+            union_all |= cell;
         }
+        if (union_all != full_set) return;  // Invalid partition
 
         for (int E = 0; E < vars.size(); ++E) {
             for (int F = 0; F < vars.size(); ++F) {
@@ -306,15 +416,18 @@ public:
     // and [E∩I2 ≰ F∩I2] = ∪{C ∈ I2 | ¬R[E∩C][F∩C]}
     // CK[S] = largest element in (F1 ∩ F2) that is contained in S
     void encode_A2D(z3::solver& s, const std::vector<int>& I1, const std::vector<int>& I2) {
-        std::cout << "  Encoding Agreeing to Disagree (A2D)...\n";
+        if (!silent) std::cout << "  Encoding Agreeing to Disagree (A2D)...\n";
         
         int n = vars.universe_size();
         
-        // Verify partitions
-        if (!BitOps::verify_partition(I1, n) || !BitOps::verify_partition(I2, n)) {
-            std::cerr << "Invalid partition - aborting A2D encoding\n";
-            return;
-        }
+        // Verify partitions (silent)
+        int full_set = (1 << n) - 1;
+        auto check_partition = [full_set](const std::vector<int>& p) {
+            int u = 0;
+            for (int c : p) { if (c == 0) return false; u |= c; }
+            return u == full_set;
+        };
+        if (!check_partition(I1) || !check_partition(I2)) return;
         
         // ============================================
         // PHASE 1: Static Precomputation
@@ -361,8 +474,10 @@ public:
             }
         }
         
-        std::cout << "    Fields: |F1|=" << F1.size() << ", |F2|=" << F2.size() 
-                  << ", |common|=" << common_field.size() << ", |T|=" << T.size() << "\n";
+        if (!silent) {
+            std::cout << "    Fields: |F1|=" << F1.size() << ", |F2|=" << F2.size() 
+                      << ", |common|=" << common_field.size() << ", |T|=" << T.size() << "\n";
+        }
         
         // 1.5 For each A ∈ F1, find which cells compose it
         // cells_in1[A] = {C ∈ I1 | C ⊆ A}
@@ -445,15 +560,425 @@ public:
         
         if (big_disjuncts.size() > 0) {
             s.add(z3::mk_or(big_disjuncts));
-            std::cout << "    Added A2D constraint with " << big_disjuncts.size() << " disjuncts\n";
+            if (!silent) {
+                std::cout << "    Added A2D constraint with " << big_disjuncts.size() << " disjuncts\n";
+            }
         } else {
-            std::cout << "    Warning: No A2D disjuncts generated (T is empty)\n";
+            if (!silent) {
+                std::cout << "    Warning: No A2D disjuncts generated (T is empty)\n";
+            }
         }
     }
 };
 
 // ============================================================
-//  FrameFinder - Solver orchestrator
+//  Task - Represents a single search task (partition pair)
+// ============================================================
+
+struct Task {
+    int id;
+    std::vector<int> partition1;  // I1
+    std::vector<int> partition2;  // I2
+};
+
+// ============================================================
+//  TaskQueue - Thread-safe work queue
+// ============================================================
+
+class TaskQueue {
+    std::queue<Task> tasks;
+    std::mutex mtx;
+    std::condition_variable cv;
+    bool finished = false;
+
+public:
+    void push(Task t) {
+        std::lock_guard<std::mutex> lock(mtx);
+        tasks.push(std::move(t));
+        cv.notify_one();
+    }
+    
+    bool try_pop(Task& t) {
+        std::unique_lock<std::mutex> lock(mtx);
+        cv.wait(lock, [this]() { return !tasks.empty() || finished; });
+        if (tasks.empty()) return false;
+        t = std::move(tasks.front());
+        tasks.pop();
+        return true;
+    }
+    
+    void mark_finished() {
+        std::lock_guard<std::mutex> lock(mtx);
+        finished = true;
+        cv.notify_all();
+    }
+    
+    size_t size() {
+        std::lock_guard<std::mutex> lock(mtx);
+        return tasks.size();
+    }
+};
+
+// ============================================================
+//  GlobalStopFlag - Coordinates early termination
+// ============================================================
+
+class GlobalStopFlag {
+    std::atomic<bool> found{false};
+    std::atomic<int> winning_task_id{-1};
+    std::mutex result_mutex;
+    
+    // Store winning result (extracted matrix, not z3::model which is context-dependent)
+    std::vector<std::vector<bool>> winning_matrix;
+    Task winning_task;
+    int universe_size_stored = 0;
+
+public:
+    bool should_stop() const { return found.load(); }
+    
+    void report_solution(int task_id, const Task& task, 
+                         const std::vector<std::vector<bool>>& matrix,
+                         int universe_size) {
+        std::lock_guard<std::mutex> lock(result_mutex);
+        if (!found.load()) {
+            found.store(true);
+            winning_task_id.store(task_id);
+            winning_task = task;
+            winning_matrix = matrix;
+            universe_size_stored = universe_size;
+        }
+    }
+    
+    bool has_solution() const { return found.load(); }
+    int get_winning_task_id() const { return winning_task_id.load(); }
+    
+    Task get_winning_task() {
+        std::lock_guard<std::mutex> lock(result_mutex);
+        return winning_task;
+    }
+    
+    std::vector<std::vector<bool>> get_winning_matrix() {
+        std::lock_guard<std::mutex> lock(result_mutex);
+        return winning_matrix;
+    }
+    
+    int get_universe_size() {
+        std::lock_guard<std::mutex> lock(result_mutex);
+        return universe_size_stored;
+    }
+};
+
+// ============================================================
+//  SolverWorker - Worker thread that processes tasks
+// ============================================================
+
+class SolverWorker {
+    int worker_id;
+    int universe_size;
+    TaskQueue& queue;
+    GlobalStopFlag& stop_flag;
+    std::atomic<int>& tasks_completed;
+    std::mutex& io_mutex;
+    
+    static constexpr unsigned int SOLVER_TIMEOUT_MS = 5000;  // Check stop flag every 5 seconds
+
+public:
+    SolverWorker(int id, int n, TaskQueue& q, GlobalStopFlag& sf, 
+                 std::atomic<int>& tc, std::mutex& iom)
+        : worker_id(id), universe_size(n), queue(q), stop_flag(sf),
+          tasks_completed(tc), io_mutex(iom) {}
+    
+    void run() {
+        // Create thread-local Z3 context and variables
+        z3::context local_ctx;
+        FrameVariables local_vars(local_ctx, universe_size, /*silent=*/true);
+        AxiomEncoder encoder(local_vars, /*silent=*/true);
+        
+        Task task;
+        while (!stop_flag.should_stop() && queue.try_pop(task)) {
+            // Create fresh solver for this task
+            z3::solver solver(local_ctx);
+            
+            // Encode common axioms
+            encoder.encode_common_axioms(solver);
+            
+            // Encode partition-specific axioms
+            encoder.encode_not_dilation(solver, task.partition1);
+            encoder.encode_not_dilation(solver, task.partition2);
+            encoder.encode_A2D(solver, task.partition1, task.partition2);
+            
+            // Solve with periodic interruption check
+            z3::check_result result = solve_with_interrupt_check(solver);
+            
+            if (result == z3::sat && !stop_flag.should_stop()) {
+                // Extract matrix before reporting (model is context-dependent)
+                z3::model m = solver.get_model();
+                int ps = local_vars.size();
+                std::vector<std::vector<bool>> matrix(ps, std::vector<bool>(ps));
+                for (int i = 0; i < ps; ++i) {
+                    for (int j = 0; j < ps; ++j) {
+                        matrix[i][j] = m.eval(local_vars.get_R(i, j)).is_true();
+                    }
+                }
+                
+                stop_flag.report_solution(task.id, task, matrix, universe_size);
+                
+                {
+                    std::lock_guard<std::mutex> lock(io_mutex);
+                    std::cout << "[Worker " << worker_id << "] FOUND SOLUTION for task " 
+                              << task.id << "!\n";
+                }
+                return;
+            }
+            
+            // Task completed (SAT found by this worker, UNSAT, or stopped)
+            int completed = ++tasks_completed;
+            if (!stop_flag.should_stop()) {
+                std::lock_guard<std::mutex> lock(io_mutex);
+                std::cout << "[Worker " << worker_id << "] Task " << task.id 
+                          << " completed (" << (result == z3::unsat ? "UNSAT" : "interrupted")
+                          << "). Progress: " << completed << " tasks done.\n";
+            }
+        }
+    }
+
+private:
+    z3::check_result solve_with_interrupt_check(z3::solver& s) {
+        // Use solver parameters for timeout-based checking
+        z3::params p(s.ctx());
+        p.set("timeout", SOLVER_TIMEOUT_MS);
+        s.set(p);
+        
+        while (!stop_flag.should_stop()) {
+            z3::check_result result = s.check();
+            if (result == z3::sat || result == z3::unsat) {
+                return result;
+            }
+            // result == z3::unknown means timeout, check stop flag and retry
+        }
+        return z3::unknown;  // Stopped by flag
+    }
+};
+
+// ============================================================
+//  ParallelFrameFinder - Orchestrates parallel search
+// ============================================================
+
+class ParallelFrameFinder {
+    int universe_size;
+    int num_threads;
+    TaskQueue queue;
+    GlobalStopFlag stop_flag;
+    std::vector<std::thread> workers;
+    std::atomic<int> tasks_completed{0};
+    std::mutex io_mutex;
+
+public:
+    ParallelFrameFinder(int n, int threads = 0)
+        : universe_size(n), 
+          num_threads(threads > 0 ? threads : std::thread::hardware_concurrency()) {
+        if (num_threads == 0) num_threads = 4;  // Fallback
+    }
+    
+    // Main entry point: find a frame satisfying all axioms for some partition pair
+    bool find_frame() {
+        auto start_time = std::chrono::steady_clock::now();
+        
+        // Generate all partition pairs
+        std::cout << "Generating partition pairs for universe size " << universe_size << "...\n";
+        auto pairs = PartitionEnumerator::generate_partition_pairs(universe_size);
+        std::cout << "Generated " << pairs.size() << " partition pairs\n";
+        std::cout << "Using " << num_threads << " worker threads\n\n";
+        
+        // Populate task queue
+        for (size_t i = 0; i < pairs.size(); ++i) {
+            queue.push(Task{static_cast<int>(i), pairs[i].first, pairs[i].second});
+        }
+        queue.mark_finished();
+        
+        // Launch workers
+        for (int i = 0; i < num_threads; ++i) {
+            workers.emplace_back([this, i]() {
+                SolverWorker worker(i, universe_size, queue, stop_flag, 
+                                    tasks_completed, io_mutex);
+                worker.run();
+            });
+        }
+        
+        // Wait for all workers
+        for (auto& t : workers) {
+            t.join();
+        }
+        
+        auto end_time = std::chrono::steady_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+        
+        std::cout << "\n=== SEARCH COMPLETE ===\n";
+        std::cout << "Total time: " << duration.count() << " ms\n";
+        std::cout << "Tasks completed: " << tasks_completed.load() << "/" << pairs.size() << "\n";
+        
+        return stop_flag.has_solution();
+    }
+    
+    // Display results after find_frame() returns true
+    void display_result() {
+        if (!stop_flag.has_solution()) {
+            std::cout << "No solution found.\n";
+            return;
+        }
+        
+        Task task = stop_flag.get_winning_task();
+        auto matrix = stop_flag.get_winning_matrix();
+        int n = stop_flag.get_universe_size();
+        int ps = static_cast<int>(matrix.size());
+        
+        std::cout << "\n=== WINNING SOLUTION ===\n";
+        std::cout << "Task ID: " << task.id << "\n";
+        std::cout << "Partition I1: " << BitOps::partition_to_string(task.partition1, n) << "\n";
+        std::cout << "Partition I2: " << BitOps::partition_to_string(task.partition2, n) << "\n";
+        
+        // Display matrix
+        std::cout << "\nBoolean Matrix R[i][j] (1 means subset_i <= subset_j):\n\n";
+        
+        int col_width = (ps > 10) ? 3 : 2;
+        
+        // Header row
+        std::cout << "     ";
+        for (int j = 0; j < ps; ++j) {
+            std::cout << std::setw(col_width) << j;
+        }
+        std::cout << "\n     ";
+        for (int j = 0; j < ps; ++j) {
+            for (int w = 0; w < col_width; ++w) std::cout << "-";
+        }
+        std::cout << "\n";
+        
+        // Data rows
+        for (int i = 0; i < ps; ++i) {
+            std::cout << std::setw(3) << i << " | ";
+            for (int j = 0; j < ps; ++j) {
+                std::cout << std::setw(col_width) << (matrix[i][j] ? "1" : ".");
+            }
+            std::cout << " | " << BitOps::to_string(i, n) << "\n";
+        }
+        
+        // Verify solution
+        verify_solution(matrix, task, n);
+    }
+
+private:
+    void verify_solution(const std::vector<std::vector<bool>>& matrix, 
+                         const Task& task, int n) {
+        int ps = static_cast<int>(matrix.size());
+        std::cout << "\n=== VERIFICATION ===\n";
+        
+        // Check reflexivity (implied by monotonicity: i ⊆ i)
+        bool reflexive_ok = true;
+        for (int i = 0; i < ps; ++i) {
+            if (!matrix[i][i]) { reflexive_ok = false; break; }
+        }
+        std::cout << "Reflexivity: " << (reflexive_ok ? "PASS" : "FAIL") << "\n";
+        
+        // Check transitivity
+        bool transitive_ok = true;
+        for (int i = 0; i < ps && transitive_ok; ++i) {
+            for (int j = 0; j < ps && transitive_ok; ++j) {
+                for (int k = 0; k < ps && transitive_ok; ++k) {
+                    if (matrix[i][j] && matrix[j][k] && !matrix[i][k]) {
+                        transitive_ok = false;
+                    }
+                }
+            }
+        }
+        std::cout << "Transitivity: " << (transitive_ok ? "PASS" : "FAIL") << "\n";
+        
+        // Check monotonicity
+        bool monotonicity_ok = true;
+        for (int i = 0; i < ps; ++i) {
+            for (int j = 0; j < ps; ++j) {
+                if (BitOps::is_subset(i, j) && !matrix[i][j]) {
+                    monotonicity_ok = false;
+                }
+            }
+        }
+        std::cout << "Monotonicity: " << (monotonicity_ok ? "PASS" : "FAIL") << "\n";
+        
+        // Check non-triviality
+        int full_set = ps - 1;
+        bool non_triviality_ok = !matrix[full_set][0];
+        std::cout << "Non-triviality: " << (non_triviality_ok ? "PASS" : "FAIL") << "\n";
+        
+        // Check CSTP
+        bool cstp_ok = true;
+        for (int A = 0; A < ps && cstp_ok; ++A) {
+            for (int B = 0; B < ps && cstp_ok; ++B) {
+                if (BitOps::set_intersection(A, B) != 0) continue;
+                for (int C = 0; C < ps && cstp_ok; ++C) {
+                    for (int D = 0; D < ps && cstp_ok; ++D) {
+                        if (BitOps::set_intersection(C, D) != 0) continue;
+                        int AB = BitOps::set_union(A, B);
+                        int CD = BitOps::set_union(C, D);
+                        if (matrix[A][C] && matrix[B][D] && !matrix[AB][CD]) {
+                            cstp_ok = false;
+                        }
+                    }
+                }
+            }
+        }
+        std::cout << "CSTP: " << (cstp_ok ? "PASS" : "FAIL") << "\n";
+        
+        // Check Strict CSTP
+        bool strict_cstp_ok = true;
+        for (int A = 0; A < ps && strict_cstp_ok; ++A) {
+            for (int B = 0; B < ps && strict_cstp_ok; ++B) {
+                if (BitOps::set_intersection(A, B) != 0) continue;
+                for (int C = 0; C < ps && strict_cstp_ok; ++C) {
+                    for (int D = 0; D < ps && strict_cstp_ok; ++D) {
+                        if (BitOps::set_intersection(C, D) != 0) continue;
+                        int AB = BitOps::set_union(A, B);
+                        int CD = BitOps::set_union(C, D);
+                        bool A_less_C = matrix[A][C] && !matrix[C][A];
+                        bool B_less_D = matrix[B][D] && !matrix[D][B];
+                        bool AB_less_CD = matrix[AB][CD] && !matrix[CD][AB];
+                        if (A_less_C && B_less_D && !AB_less_CD) {
+                            strict_cstp_ok = false;
+                        }
+                    }
+                }
+            }
+        }
+        std::cout << "Strict CSTP: " << (strict_cstp_ok ? "PASS" : "FAIL") << "\n";
+        
+        // Check Not Dilation for I1 and I2
+        auto check_not_dilation = [&](const std::vector<int>& partition, const std::string& name) {
+            bool ok = true;
+            for (int E = 0; E < ps && ok; ++E) {
+                for (int F = 0; F < ps && ok; ++F) {
+                    bool EF_comparable = matrix[E][F] || matrix[F][E];
+                    if (!EF_comparable) continue;
+                    
+                    bool exists_comparable = false;
+                    for (int C : partition) {
+                        int EC = BitOps::set_intersection(E, C);
+                        int FC = BitOps::set_intersection(F, C);
+                        if (matrix[EC][FC] || matrix[FC][EC]) {
+                            exists_comparable = true;
+                            break;
+                        }
+                    }
+                    if (!exists_comparable) ok = false;
+                }
+            }
+            std::cout << "Not Dilation (" << name << "): " << (ok ? "PASS" : "FAIL") << "\n";
+        };
+        
+        check_not_dilation(task.partition1, "I1");
+        check_not_dilation(task.partition2, "I2");
+    }
+};
+
+// ============================================================
+//  FrameFinder - Solver orchestrator (single-threaded version)
 // ============================================================
 //  Owns context, solver, variables, and encoder
 // ============================================================
@@ -725,60 +1250,60 @@ namespace WitnessExtractor {
 }
 
 // ============================================================
-//  Main - Demonstration
+//  Main - Parallel Frame Finding for Universe Size 4
+// ============================================================
+//  Searches all 15*14 = 210 partition pairs using multiple threads
 // ============================================================
 
-int main() {
-    // Create finder for universe {0, 1, 2, 3, 4}
-    int n = 5;
-    FrameFinder finder(n);
-
-    // Define two partitions of the universe for A2D
-    // I1: Agent 1's information partition
-    std::vector<int> partition1 = {
-        0b11111, // {0, 1, 2, 3, 4}
-    };
-
-    // I2: Agent 2's information partition
-    std::vector<int> partition2 = {
-        0b00011, // {0,1}
-        0b01100, // {2,3}
-        0b10000  // {4}
-    };
-
-    // Verify the partitions
-    if (!BitOps::verify_partition(partition1, n)) {
-        std::cerr << "Invalid partition1 provided. Exiting.\n";
-        return 1;
+int main(int argc, char* argv[]) {
+    // Configuration
+    int universe_size = 4;  // {0, 1, 2, 3}
+    int num_threads = 8;    // Default to 8 threads
+    
+    // Parse command line arguments
+    if (argc >= 2) {
+        universe_size = std::atoi(argv[1]);
+        if (universe_size < 2 || universe_size > 6) {
+            std::cerr << "Universe size must be between 2 and 6. Using default (4).\n";
+            universe_size = 4;
+        }
     }
-    if (!BitOps::verify_partition(partition2, n)) {
-        std::cerr << "Invalid partition2 provided. Exiting.\n";
-        return 1;
+    if (argc >= 3) {
+        num_threads = std::atoi(argv[2]);
+        if (num_threads < 1) {
+            num_threads = std::thread::hardware_concurrency();
+            if (num_threads == 0) num_threads = 4;
+        }
     }
-
-    // Encode axioms by directly calling encoder methods
-    std::cout << "\nEncoding axioms...\n";
-    finder.encoder().encode_transitivity(finder.solver());
-    finder.encoder().encode_monotonicity(finder.solver());
-    finder.encoder().encode_non_triviality(finder.solver());
-    finder.encoder().encode_CSTP(finder.solver());
-    finder.encoder().encode_strict_CSTP(finder.solver());
-    finder.encoder().encode_not_dilation(finder.solver(), partition1);
-    finder.encoder().encode_not_dilation(finder.solver(), partition2);
-    finder.encoder().encode_A2D(finder.solver(), partition1, partition2);
-
-    // Solve
-    z3::check_result result = finder.solve();
-
-    if (result == z3::sat) {
-        std::cout << "SAT - Solution found!\n";
-        finder.display_model();
-    } else if (result == z3::unsat) {
-        std::cout << "UNSAT - No solution exists with given constraints\n";
+    
+    std::cout << "===========================================\n";
+    std::cout << "   Parallel Finite Frame Finder (Z3)\n";
+    std::cout << "===========================================\n\n";
+    std::cout << "Universe size: " << universe_size << " (Omega = {0.." << (universe_size-1) << "})\n";
+    std::cout << "Powerset size: " << (1 << universe_size) << " subsets\n";
+    std::cout << "Threads: " << num_threads << "\n\n";
+    
+    // Calculate expected partition count (Bell number)
+    auto all_partitions = PartitionEnumerator::generate_all_partitions(universe_size);
+    int num_partitions = static_cast<int>(all_partitions.size());
+    int num_pairs = num_partitions * (num_partitions - 1);
+    
+    std::cout << "Number of partitions (Bell(" << universe_size << ")): " << num_partitions << "\n";
+    std::cout << "Number of partition pairs to search: " << num_pairs << "\n\n";
+    
+    // Run parallel search
+    ParallelFrameFinder finder(universe_size, num_threads);
+    
+    bool found = finder.find_frame();
+    
+    if (found) {
+        finder.display_result();
+        std::cout << "\n=== SUCCESS ===\n";
     } else {
-        std::cout << "UNKNOWN - Solver couldn't determine\n";
+        std::cout << "\n=== NO SOLUTION FOUND ===\n";
+        std::cout << "Searched all " << num_pairs << " partition pairs - no frame exists.\n";
     }
-
-    return 0;
+    
+    return found ? 0 : 1;
 }
 

@@ -4,6 +4,9 @@ project(MyProj LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# ---- Threading support ----
+find_package(Threads REQUIRED)
+
 # ---- Z3 build options (must be set BEFORE add_subdirectory) ----
 # Z3_BUILD_LIBZ3_SHARED: build libz3 as shared (ON) or static (OFF).
 set(Z3_BUILD_LIBZ3_SHARED OFF CACHE BOOL "Build Z3 as a shared library" FORCE)
@@ -22,7 +25,7 @@ target_link_libraries(myproj PRIVATE libz3)
 # ---- test target ----
 enable_testing()
 add_executable(myproj_tests src/test.cpp)
-target_link_libraries(myproj_tests PRIVATE libz3)
+target_link_libraries(myproj_tests PRIVATE libz3 Threads::Threads)
 add_test( NAME myproj_basic_tests COMMAND myproj_tests)
 
 # add_executable(example_groups src/example_groups.cpp)
