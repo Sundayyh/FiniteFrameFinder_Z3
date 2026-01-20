@@ -593,6 +593,36 @@ public:
         }
     }
 
+    // Axiom: Not Weak Dilation (Not Weak DLT) - Weak Dilation does not hold for the relation R with respect to a given partition of the universe Omega. Weak Dilation means that there is a pair of subsets E and F such that for SOME (note the difference between dilation and weak dilation) element C in the partition, E and F are R-comparable but (E∩C) and (F∩C) are not. Thus, Not Weak Dilation: ∀E,F: comparable(E,F) → ∀C∈partition: comparable(E∩C, F∩C) where comparable(X,Y) means R[X][Y] ∨ R[Y][X].
+    void encode_not_weak_dilation(z3::solver& s, const std::vector<int>& partition) {
+        if (!silent) std::cout << "  Encoding Not Dilation (Not DLT)...\n";
+        
+        // Verify partition before encoding
+        if (!BitOps::verify_partition(partition, vars.universe_size())) {
+            std::cerr << "Invalid partition - aborting Not Weak Dilation encoding\n";
+            return;
+        }
+
+        for (int E = 0; E < vars.size(); ++E) {
+            for (int F = 0; F < vars.size(); ++F) {
+                // Build conjunction: ∀C∈partition such that (E∩C, F∩C) are comparable
+                z3::expr_vector conjuncts(vars.context());
+                for (int C : partition) {
+                    int EC = BitOps::set_intersection(E, C);
+                    int FC = BitOps::set_intersection(F, C);
+                    // (E∩C) and (F∩C) are R-comparable
+                    conjuncts.push_back(vars.get_R(EC, FC) || vars.get_R(FC, EC));
+                }
+                
+                z3::expr E_F_comparable = vars.get_R(E, F) || vars.get_R(F, E);
+                z3::expr forall_C_comparable = z3::mk_and(conjuncts);
+                
+                // comparable(E,F) → ∀C∈partition: comparable(E∩C, F∩C)
+                s.add(z3::implies(E_F_comparable, forall_C_comparable));
+            }
+        }
+    }
+
     // Axiom: Agreeing to Disagree (A2D) - There exists a pair of subsets E and F such that 
     // CK[E∩I1 ≤ F∩I1] ∩ CK[E∩I2 ≰ F∩I2] ≠ ∅
     // where [E∩I1 ≤ F∩I1] = ∪{C ∈ I1 | R[E∩C][F∩C]} 
@@ -1184,7 +1214,7 @@ public:
         
         // Display matrix with highlighting
         std::cout << "\nBoolean Matrix R[i][j]:\n";
-        std::cout << "  '1' = true (required by monotonicity: i ⊆ j)\n";
+        std::cout << "  '1' = true (required by monotonicity: i is subset of j)\n";
         std::cout << "  '+' = true (EXTENSION beyond minimal monotonic relation)\n";
         std::cout << "  '.' = false\n\n";
         
@@ -1422,7 +1452,7 @@ public:
         verify_monotonicity(matrix);
         verify_non_triviality(matrix);
         verify_CSTP(matrix);
-        verify_strict_CSTP(matrix);
+        // verify_strict_CSTP(matrix);
     }
 
 private:
@@ -1888,7 +1918,7 @@ private:
 int main(int argc, char* argv[]) {
     // Configuration - hardcoded for exhaustive search
     int universe_size = 4;  // {0, 1, 2, 3}
-    int num_threads = 16;   // 16 threads as specified
+    int num_threads = 8;   // 8 threads as specified
     
     // Allow override from command line
     if (argc >= 2) {
